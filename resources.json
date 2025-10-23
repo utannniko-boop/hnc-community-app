@@ -121,25 +121,25 @@
       ]
     },
     {
-      "id": "salivary",
-      "name": "唾液腺がん",
-      "aliases": [
-        "唾液腺がん","唾液腺癌",
-        "耳下腺がん","耳下腺癌","parotid gland cancer","parotid",
-        "顎下腺がん","顎下腺癌","submandibular gland cancer","submandibular",
-        "舌下腺がん","舌下腺癌","sublingual gland cancer","sublingual",
-        "小唾液腺がん","小唾液腺癌","minor salivary gland cancer",
-        "salivary gland cancer","C07","C08"
-      ],
-      "icd": "C07-C08",
-      "topics": [
-        {"title":"顔面神経のケア","desc":"理学療法・表情筋トレ"}
-      ],
-      "links": [
-        {"title":"国がん：唾液腺がん","url":"https://ganjoho.jp/public/cancer/salivary_gland/"},
-        {"title":"Rare cancers resources","url":"https://www.rarecancers.org.au/"}
-      ]
-    }
+  "id": "salivary",
+  "name": "唾液腺がん",
+  "aliases": [
+    "唾液腺がん","唾液腺癌",
+    "耳下腺がん","耳下腺癌","parotid gland cancer","parotid",
+    "顎下腺がん","顎下腺癌","submandibular gland cancer","submandibular",
+    "舌下腺がん","舌下腺癌","sublingual gland cancer","sublingual",
+    "小唾液腺がん","小唾液腺癌","minor salivary gland cancer",
+    "salivary gland cancer","C07","C08"
+  ],
+  "icd": "C07-C08",
+  "topics": [
+    {"title":"顔面神経のケア","desc":"理学療法・表情筋トレ"}
+  ],
+  "links": [
+    {"title":"国がん：唾液腺がん","url":"https://ganjoho.jp/public/cancer/salivary_gland/"},
+    {"title":"Rare cancers resources","url":"https://www.rarecancers.org.au/"}
+  ]
+}
   ],
   "treatments": [
     {
