@@ -4,340 +4,460 @@
       "id": "oral",
       "name": "口腔がん（舌・口底など）",
       "aliases": [
-        "口腔がん","口腔癌",
-        "舌がん","舌癌","tongue cancer","lingual cancer",
-        "口底がん","口底癌","floor of mouth cancer",
-        "歯肉がん","歯肉癌","gingival cancer",
-        "頬粘膜がん","頬粘膜癌","buccal mucosa cancer",
-        "硬口蓋がん","硬口蓋癌","hard palate cancer",
-        "oral cancer","oral cavity cancer","C00","C01","C02","C03","C04","C05","C06"
+        "口腔がん",
+        "口腔癌",
+        "舌がん",
+        "舌癌",
+        "tongue cancer",
+        "lingual cancer",
+        "口底がん",
+        "口底癌",
+        "floor of mouth cancer",
+        "歯肉がん",
+        "歯肉癌",
+        "gingival cancer",
+        "頬粘膜がん",
+        "頬粘膜癌",
+        "buccal mucosa cancer",
+        "硬口蓋がん",
+        "硬口蓋癌",
+        "hard palate cancer",
+        "oral cancer",
+        "oral cavity cancer",
+        "C00",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06"
       ],
       "icd": "C00-C06",
       "summary": "口腔の粘膜に発生。嚥下・発声・咀嚼・口腔衛生の課題が生じやすい。",
       "topics": [
-        {"title":"術後の発音・嚥下リハ","desc":"STと進めるホームエクササイズ"},
-        {"title":"口腔乾燥対策","desc":"保湿ジェル・加湿・水分摂取のコツ"}
+        { "title": "術後の発音・嚥下リハ", "desc": "STと進めるホームエクササイズ" },
+        { "title": "口腔乾燥対策", "desc": "保湿ジェル・加湿・水分摂取のコツ" }
       ],
       "links": [
-        {"title":"がん情報サービス（頭頸部）","url":"https://ganjoho.jp/public/cancer/head_neck/"},
-        {"title":"ClinicalTrials.gov: oral/tongue","url":"https://clinicaltrials.gov/search?cond=oral%20cancer"}
+        { "title": "がん情報サービス（頭頸部）", "url": "https://ganjoho.jp/public/cancer/head_neck/" },
+        { "title": "ClinicalTrials.gov: oral/tongue", "url": "https://clinicaltrials.gov/search?cond=oral%20cancer" }
       ]
     },
     {
       "id": "oropharynx",
       "name": "中咽頭がん",
       "aliases": [
-        "中咽頭がん","中咽頭癌",
-        "扁桃がん","扁桃癌","palatine tonsil cancer",
-        "舌根がん","舌根癌","base of tongue cancer",
-        "軟口蓋がん","軟口蓋癌","soft palate cancer",
-        "oropharyngeal cancer","HPV関連がん","HPV関連癌","HPV-positive","HPV陽性中咽頭がん","C10"
+        "中咽頭がん",
+        "中咽頭癌",
+        "扁桃がん",
+        "扁桃癌",
+        "palatine tonsil cancer",
+        "舌根がん",
+        "舌根癌",
+        "base of tongue cancer",
+        "軟口蓋がん",
+        "軟口蓋癌",
+        "soft palate cancer",
+        "oropharyngeal cancer",
+        "HPV関連がん",
+        "HPV関連癌",
+        "HPV-positive",
+        "HPV陽性中咽頭がん",
+        "C10"
       ],
       "icd": "C10",
       "summary": "扁桃・舌根など。HPV関連症例を含む。",
-      "topics": [{"title":"化学放射線中の味覚変化","desc":"食事の工夫"}],
-      "links": [{"title":"PubMed: oropharyngeal","url":"https://pubmed.ncbi.nlm.nih.gov/?term=oropharyngeal+cancer"}]
+      "topics": [
+        { "title": "化学放射線中の味覚変化", "desc": "食事の工夫" }
+      ],
+      "links": [
+        { "title": "PubMed: oropharyngeal", "url": "https://pubmed.ncbi.nlm.nih.gov/?term=oropharyngeal+cancer" }
+      ]
     },
     {
       "id": "hypopharynx",
       "name": "下咽頭がん",
       "aliases": [
-        "下咽頭がん","下咽頭癌",
-        "梨状陥凹がん","梨状陥凹癌","pyriform sinus cancer",
-        "咽頭後壁がん","咽頭後壁癌","posterior pharyngeal wall cancer",
-        "輪状後部がん","輪状後部癌","postcricoid cancer",
-        "hypopharyngeal cancer","C13"
+        "下咽頭がん",
+        "下咽頭癌",
+        "梨状陥凹がん",
+        "梨状陥凹癌",
+        "pyriform sinus cancer",
+        "咽頭後壁がん",
+        "咽頭後壁癌",
+        "posterior pharyngeal wall cancer",
+        "輪状後部がん",
+        "輪状後部癌",
+        "postcricoid cancer",
+        "hypopharyngeal cancer",
+        "C13"
       ],
       "icd": "C13",
-      "topics": [{"title":"嚥下障害の段階的リハ","desc":"増粘剤・食形態"}],
-      "links": [{"title":"国がん：頭頸部がん","url":"https://ganjoho.jp/public/cancer/head_neck/"}]
+      "topics": [
+        { "title": "嚥下障害の段階的リハ", "desc": "増粘剤・食形態" }
+      ],
+      "links": [
+        { "title": "国がん：頭頸部がん", "url": "https://ganjoho.jp/public/cancer/head_neck/" }
+      ]
     },
     {
       "id": "nasopharynx",
       "name": "上咽頭がん",
       "aliases": [
-        "上咽頭がん","上咽頭癌",
-        "nasopharyngeal carcinoma","nasopharyngeal cancer","NPC",
+        "上咽頭がん",
+        "上咽頭癌",
+        "nasopharyngeal carcinoma",
+        "nasopharyngeal cancer",
+        "NPC",
         "C11"
       ],
       "icd": "C11",
-      "topics": [{"title":"放射線後の口腔ケア","desc":"粘膜炎・唾液・味覚"}],
-      "links": [{"title":"PubMed: NPC","url":"https://pubmed.ncbi.nlm.nih.gov/?term=nasopharyngeal+carcinoma"}]
+      "topics": [
+        { "title": "放射線後の口腔ケア", "desc": "粘膜炎・唾液・味覚" }
+      ],
+      "links": [
+        { "title": "PubMed: NPC", "url": "https://pubmed.ncbi.nlm.nih.gov/?term=nasopharyngeal+carcinoma" }
+      ]
     },
     {
       "id": "larynx",
       "name": "喉頭がん",
       "aliases": [
-        "喉頭がん","喉頭癌",
-        "声門がん","声門癌","glottic cancer",
-        "声門上がん","声門上癌","supraglottic cancer",
-        "声門下がん","声門下癌","subglottic cancer",
-        "laryngeal cancer","C32"
+        "喉頭がん",
+        "喉頭癌",
+        "声門がん",
+        "声門癌",
+        "glottic cancer",
+        "声門上がん",
+        "声門上癌",
+        "supraglottic cancer",
+        "声門下がん",
+        "声門下癌",
+        "subglottic cancer",
+        "laryngeal cancer",
+        "C32"
       ],
       "icd": "C32",
-      "topics": [{"title":"発声代替","desc":"電気式人工喉頭・食道発声・シャント"}],
-      "links": [{"title":"Laryngectomy support","url":"https://www.atosmedical.com/"}]
+      "topics": [
+        { "title": "発声代替", "desc": "電気式人工喉頭・食道発声・シャント" }
+      ],
+      "links": [
+        { "title": "Laryngectomy support", "url": "https://www.atosmedical.com/" }
+      ]
     },
     {
       "id": "nasal",
       "name": "鼻腔がん",
       "aliases": [
-        "鼻腔がん","鼻腔癌",
-        "副鼻腔がん","副鼻腔癌",
-        "鼻副鼻腔がん","鼻副鼻腔癌",
-        "上顎洞がん","上顎洞癌","maxillary sinus cancer",
-        "篩骨洞がん","篩骨洞癌","ethmoid sinus cancer",
-        "蝶形骨洞がん","蝶形骨洞癌","sphenoid sinus cancer",
-        "前頭洞がん","前頭洞癌","frontal sinus cancer",
-        "nasal cavity cancer","paranasal sinus cancer","nasal cancer",
-        "C30","C31"
+        "鼻腔がん",
+        "鼻腔癌",
+        "副鼻腔がん",
+        "副鼻腔癌",
+        "鼻副鼻腔がん",
+        "鼻副鼻腔癌",
+        "上顎洞がん",
+        "上顎洞癌",
+        "maxillary sinus cancer",
+        "篩骨洞がん",
+        "篩骨洞癌",
+        "ethmoid sinus cancer",
+        "蝶形骨洞がん",
+        "蝶形骨洞癌",
+        "sphenoid sinus cancer",
+        "前頭洞がん",
+        "前頭洞癌",
+        "frontal sinus cancer",
+        "nasal cavity cancer",
+        "paranasal sinus cancer",
+        "nasal cancer",
+        "C30",
+        "C31"
       ],
       "icd": "C30-C31",
-      "topics": [{"title":"眼窩・顔面の術後ケア","desc":"補綴・スキンケア"}],
+      "topics": [
+        { "title": "眼窩・顔面の術後ケア", "desc": "補綴・スキンケア" }
+      ],
       "links": [
-        {"title":"国がん：鼻・副鼻腔","url":"https://ganjoho.jp/public/cancer/nasal/index.html"},
-        {"title":"NCI: Paranasal Sinus (患者向け)","url":"https://www.cancer.gov/types/head-and-neck/patient/paranasal-sinus-treatment-pdq"}
+        { "title": "国がん：鼻・副鼻腔", "url": "https://ganjoho.jp/public/cancer/nasal/index.html" },
+        { "title": "NCI: Paranasal Sinus (患者向け)", "url": "https://www.cancer.gov/types/head-and-neck/patient/paranasal-sinus-treatment-pdq" }
       ]
     },
     {
       "id": "salivary",
       "name": "唾液腺がん",
       "aliases": [
-        "唾液腺がん","唾液腺癌",
-        "耳下腺がん","耳下腺癌","parotid cancer","parotid gland cancer","parotid",
-        "顎下腺がん","顎下腺癌","submandibular gland cancer","submandibular",
-        "舌下腺がん","舌下腺癌","sublingual gland cancer","sublingual",
-        "小唾液腺がん","小唾液腺癌","minor salivary gland cancer",
-        "salivary gland cancer","C07","C08"
+        "唾液腺がん",
+        "唾液腺癌",
+        "耳下腺がん",
+        "耳下腺癌",
+        "parotid cancer",
+        "parotid gland cancer",
+        "parotid",
+        "顎下腺がん",
+        "顎下腺癌",
+        "submandibular gland cancer",
+        "submandibular",
+        "舌下腺がん",
+        "舌下腺癌",
+        "sublingual gland cancer",
+        "sublingual",
+        "小唾液腺がん",
+        "小唾液腺癌",
+        "minor salivary gland cancer",
+        "salivary gland cancer",
+        "C07",
+        "C08"
       ],
       "icd": "C07-C08",
-      "topics": [{"title":"顔面神経のケア","desc":"理学療法・表情筋トレ"}],
+      "topics": [
+        { "title": "顔面神経のケア", "desc": "理学療法・表情筋トレ" }
+      ],
       "links": [
-        {"title":"国がん：唾液腺がん","url":"https://ganjoho.jp/public/cancer/salivary_gland/"},
-        {"title":"Rare cancers resources","url":"https://www.rarecancers.org.au/"}
+        { "title": "国がん：唾液腺がん", "url": "https://ganjoho.jp/public/cancer/salivary_gland/" },
+        { "title": "Rare cancers resources", "url": "https://www.rarecancers.org.au/" }
       ]
     }
   ],
   "treatments": [
-    {"title":"がん情報サービス（頭頸部）","url":"https://ganjoho.jp/public/cancer/head_neck/","source":"国立がん研究センター","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]},
-    {"title":"ClinicalTrials.gov（Head and Neck）","url":"https://clinicaltrials.gov/search?cond=Head%20and%20Neck%20Cancer","source":"臨床試験DB","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]},
-    {"title":"PubMed（論文検索）","url":"https://pubmed.ncbi.nlm.nih.gov/?term=head+and+neck+cancer","source":"NIH/NLM","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]},
-    {"title":"NICE guidelines（英）","url":"https://www.nice.org.uk/search?q=head+and+neck+cancer","source":"NICE","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]}
+    {
+      "title": "がん情報サービス（頭頸部）",
+      "url": "https://ganjoho.jp/public/cancer/head_neck/",
+      "source": "国立がん研究センター",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "title": "ClinicalTrials.gov（Head and Neck）",
+      "url": "https://clinicaltrials.gov/search?cond=Head%20and%20Neck%20Cancer",
+      "source": "臨床試験DB",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "title": "PubMed（論文検索）",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/?term=head+and+neck+cancer",
+      "source": "NIH/NLM",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "title": "NICE guidelines（英）",
+      "url": "https://www.nice.org.uk/search?q=head+and+neck+cancer",
+      "source": "NICE",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    }
   ],
   "life": [
-  {
-    "id": "oral-care-rt",
-    "title": "放射線治療中の口腔ケア基本",
-    "category": "口腔ケア",
-    "body": "やわらかめ歯ブラシ＋フッ化物含嗽。無アルコール洗口液。粘膜炎が強い時はブラッシング圧を最小に。義歯は痛点を避けて短時間使用。",
-    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]
-  },
-  {
-    "id": "mucositis-care",
-    "title": "口内炎（粘膜炎）の痛み対策",
-    "category": "口腔ケア",
-    "body": "冷たい飲食・氷片で鎮痛補助。辛い・酸っぱい・熱いものは回避。医師に局所麻酔含嗽や鎮痛剤を相談。",
-    "cancerIds": ["oral","oropharynx","nasopharynx"]
-  },
-  {
-    "id": "xerostomia",
-    "title": "口腔乾燥（唾液減少）の工夫",
-    "category": "口腔ケア",
-    "body": "人工唾液スプレー・無糖ガム・氷片。寝室の加湿、カフェイン控えめ。う蝕予防に高濃度フッ化物ペーストを。",
-    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","salivary"]
-  },
-  {
-    "id": "taste",
-    "title": "味覚低下と嗅覚の活用",
-    "category": "栄養・食事",
-    "body": "温度・香りで風味を補強（だし・ハーブ・柑橘香）。金属味が強い時はプラ製スプーンや冷食で緩和。",
-    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]
-  },
-  {
-    "id": "dysphagia-st",
-    "title": "嚥下（のみ込み）リハの始め方",
-    "category": "嚥下・発声",
-    "body": "言語聴覚士(ST)に評価依頼。顎・舌・頸部の可動域訓練、嚥下体操、増粘で誤嚥を予防。少量・ゆっくり・複数回飲下。",
-    "cancerIds": ["oropharynx","hypopharynx","larynx","oral"]
-  },
-  {
-    "id": "food-mod",
-    "title": "食形態の調整（誤嚥・むせ予防）",
-    "category": "栄養・食事",
-    "body": "とろみ付与、まとまりやすい食材（卵・豆腐等）から開始。パサつき・二相性（汁＋具）は工夫を。姿勢は軽度頸部屈曲。",
-    "cancerIds": ["oropharynx","hypopharynx","larynx","oral"]
-  },
-  {
-    "id": "voice-prosthesis",
-    "title": "発声の選択肢（喉頭摘出後）",
-    "category": "嚥下・発声",
-    "body": "電気式人工喉頭・食道発声・シャント発声。装置の衛生管理・バルブ交換時期は主治医/業者指導で。",
-    "cancerIds": ["larynx"]
-  },
-  {
-    "id": "trismus",
-    "title": "開口障害（口が開きにくい）",
-    "category": "運動・拘縮",
-    "body": "放射線後や術後は早期から開口訓練（指タテ・スティック）。痛みは“気持ちよい伸張”程度で。温罨法併用可。",
-    "cancerIds": ["oral","oropharynx","nasal","salivary"]
-  },
-  {
-    "id": "neck-fibrosis",
-    "title": "頸部のこわばり・線維化対策",
-    "category": "運動・拘縮",
-    "body": "肩甲帯・頸部ストレッチ、関節可動域訓練を毎日短時間×複数回。重い荷物・長時間同姿勢は控える。",
-    "cancerIds": ["oropharynx","hypopharynx","nasopharynx","larynx"]
-  },
-  {
-    "id": "lymphedema",
-    "title": "顔面・頸部リンパ浮腫へのセルフケア",
-    "category": "むくみ",
-    "body": "スキンケア→軽擦（やさしい撫で）→頸部への誘導。圧迫は医療者の指導下で。感染兆候（発赤・熱感）は受診。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary"]
-  },
-  {
-    "id": "skin-rt",
-    "title": "放射線皮膚炎のスキンケア",
-    "category": "皮膚ケア",
-    "body": "低刺激保湿を毎日。摩擦・日光・熱刺激を避ける。びらん時は指示薬を使用、独自の民間療法は避ける。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]
-  },
-  {
-    "id": "dental",
-    "title": "歯科フォロー（顎骨壊死予防含む）",
-    "category": "歯科",
-    "body": "放射線前後は専門歯科での洗浄・う蝕対策。抜歯はリスク評価が必要。ビスホス/デノスマブ使用中は要相談。",
-    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "nutrition",
-    "title": "体重減少を抑える栄養のコツ",
-    "category": "栄養・食事",
-    "body": "少量高カロリーを回数で。栄養補助飲料・油脂追加・間食。摂れない時は早めにNST/栄養士へ。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]
-  },
-  {
-    "id": "peg-ng",
-    "title": "経腸栄養（NG/PEG）の整備",
-    "category": "栄養・食事",
-    "body": "一時的に経腸栄養で休嚥下しつつリハ。皮膚・固定テープの清潔管理、詰まり防止のフラッシュを習慣に。",
-    "cancerIds": ["oropharynx","hypopharynx","nasopharynx","larynx"]
-  },
-  {
-    "id": "pain",
-    "title": "痛みの段階的コントロール",
-    "category": "痛み",
-    "body": "アセトアミノフェン→NSAIDs→オピオイドの階段、便秘対策を併行。神経障害性痛には補助薬も相談。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "fatigue",
-    "title": "がん関連疲労（CRF）への向き合い方",
-    "category": "全身",
-    "body": "短時間の有酸素＋レジスタンス運動を週数回。睡眠衛生・昼寝は20–30分。甲状腺機能や貧血の評価も。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "mental",
-    "title": "不安・抑うつへのセルフヘルプ",
-    "category": "こころ",
-    "body": "呼吸法・マインドフルネス・ピアサポート。強い持続症状はサイコオンコロジー外来へ。睡眠薬は独断中止しない。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "work",
-    "title": "仕事・学業への復帰準備",
-    "category": "社会・制度",
-    "body": "主治医の就労配慮指示書を活用。段階的復職（短時間勤務）と在宅併用の交渉。声・嚥下の制限は具体的に伝える。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "financial",
-    "title": "公的支援・費用の助成",
-    "category": "社会・制度",
-    "body": "高額療養費・傷病手当金・身体障害者手帳・医療費控除を確認。地域のがん相談支援センターで個別相談を。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "caregiver",
-    "title": "家族・介護者の負担軽減",
-    "category": "家族",
-    "body": "役割を分担し“休む日”を作る。短時間レスパイト・訪問看護・地域包括支援を活用。情報共有ノートを1冊に。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
-  },
-  {
-    "id": "stoma-care",
-    "title": "気管孔（ストーマ）の日常管理",
-    "category": "呼吸・ストーマ",
-    "body": "加湿（HMEフィルタ等）と痰の湿性化。シャワー時はカバー。吸引器具の衛生保持、出血や異臭は早期相談。",
-    "cancerIds": ["larynx"]
-  },
-  {
-    "id": "shoulder",
-    "title": "副神経障害に伴う肩の痛み・挙上制限",
-    "category": "運動・拘縮",
-    "body": "早期からの肩甲帯安定化訓練と可動域維持。作業療法で日常生活の代償動作を学ぶ。",
-    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","salivary"]
-  },
-  {
-    "id": "smell",
-    "title": "嗅覚低下の“匂い訓練”",
-    "category": "感覚",
-    "body": "バラ・ユーカリ・レモン・クローブ等の香りを1日2回、数カ月継続。安全の範囲で実施。",
-    "cancerIds": ["nasal","nasopharynx","oral","oropharynx"]
-  },
-  {
-    "id": "sun",
-    "title": "皮膚移植部・瘢痕部の紫外線対策",
-    "category": "皮膚ケア",
-    "body": "SPF30+の日焼け止め・帽子・スカーフ。色素沈着や瘢痕肥厚の悪化を防ぐ。屋外作業は時間帯を調整。",
-    "cancerIds": ["oral","nasal","salivary","larynx"]
-  },
-  {
-    "id": "speech-aids",
-    "title": "構音の工夫（舌・口底切除後）",
-    "category": "嚥下・発声",
-    "body": "簡潔な語彙・ゆっくり話す・相手の理解を確認。キーボード/スマホ音声合成も併用。",
-    "cancerIds": ["oral"]
-  },
-  {
-    "id": "oral-bleeding",
-    "title": "口腔の出血・潰瘍時のセルフケア",
-    "category": "口腔ケア",
-    "body": "氷で冷却・清潔ガーゼで優しく圧迫。止血困難・広範な潰瘍は受診。抗凝固薬中は自己判断で中止しない。",
-    "cancerIds": ["oral","oropharynx","salivary"]
-  }
-]
+    {
+      "id": "oral-care-rt",
+      "title": "放射線治療中の口腔ケア基本",
+      "category": "口腔ケア",
+      "body": "やわらかめ歯ブラシ＋フッ化物含嗽。無アルコール洗口液。粘膜炎が強い時はブラッシング圧を最小に。義歯は痛点を避けて短時間使用。",
+      "cancerIds": ["oral", "oropharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "id": "mucositis-care",
+      "title": "口内炎（粘膜炎）の痛み対策",
+      "category": "口腔ケア",
+      "body": "冷たい飲食・氷片で鎮痛補助。辛い・酸っぱい・熱いものは回避。医師に局所麻酔含嗽や鎮痛剤を相談。",
+      "cancerIds": ["oral", "oropharynx", "nasopharynx"]
+    },
+    {
+      "id": "xerostomia",
+      "title": "口腔乾燥（唾液減少）の工夫",
+      "category": "口腔ケア",
+      "body": "人工唾液スプレー・無糖ガム・氷片。寝室の加湿、カフェイン控えめ。う蝕予防に高濃度フッ化物ペーストを。",
+      "cancerIds": ["oral", "oropharynx", "nasopharynx", "larynx", "salivary"]
+    },
+    {
+      "id": "taste",
+      "title": "味覚低下と嗅覚の活用",
+      "category": "栄養・食事",
+      "body": "温度・香りで風味を補強（だし・ハーブ・柑橘香）。金属味が強い時はプラ製スプーンや冷食で緩和。",
+      "cancerIds": ["oral", "oropharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "id": "dysphagia-st",
+      "title": "嚥下（のみ込み）リハの始め方",
+      "category": "嚥下・発声",
+      "body": "言語聴覚士(ST)に評価依頼。顎・舌・頸部の可動域訓練、嚥下体操、増粘で誤嚥を予防。少量・ゆっくり・複数回飲下。",
+      "cancerIds": ["oropharynx", "hypopharynx", "larynx", "oral"]
+    },
+    {
+      "id": "food-mod",
+      "title": "食形態の調整（誤嚥・むせ予防）",
+      "category": "栄養・食事",
+      "body": "とろみ付与、まとまりやすい食材（卵・豆腐等）から開始。パサつき・二相性（汁＋具）は工夫を。姿勢は軽度頸部屈曲。",
+      "cancerIds": ["oropharynx", "hypopharynx", "larynx", "oral"]
+    },
+    {
+      "id": "voice-prosthesis",
+      "title": "発声の選択肢（喉頭摘出後）",
+      "category": "嚥下・発声",
+      "body": "電気式人工喉頭・食道発声・シャント発声。装置の衛生管理・バルブ交換時期は主治医/業者指導で。",
+      "cancerIds": ["larynx"]
+    },
+    {
+      "id": "trismus",
+      "title": "開口障害（口が開きにくい）",
+      "category": "運動・拘縮",
+      "body": "放射線後や術後は早期から開口訓練（指タテ・スティック）。痛みは“気持ちよい伸張”程度で。温罨法併用可。",
+      "cancerIds": ["oral", "oropharynx", "nasal", "salivary"]
+    },
+    {
+      "id": "neck-fibrosis",
+      "title": "頸部のこわばり・線維化対策",
+      "category": "運動・拘縮",
+      "body": "肩甲帯・頸部ストレッチ、関節可動域訓練を毎日短時間×複数回。重い荷物・長時間同姿勢は控える。",
+      "cancerIds": ["oropharynx", "hypopharynx", "nasopharynx", "larynx"]
+    },
+    {
+      "id": "lymphedema",
+      "title": "顔面・頸部リンパ浮腫へのセルフケア",
+      "category": "むくみ",
+      "body": "スキンケア→軽擦（やさしい撫で）→頸部への誘導。圧迫は医療者の指導下で。感染兆候（発赤・熱感）は受診。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary"]
+    },
+    {
+      "id": "skin-rt",
+      "title": "放射線皮膚炎のスキンケア",
+      "category": "皮膚ケア",
+      "body": "低刺激保湿を毎日。摩擦・日光・熱刺激を避ける。びらん時は指示薬を使用、独自の民間療法は避ける。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "id": "dental",
+      "title": "歯科フォロー（顎骨壊死予防含む）",
+      "category": "歯科",
+      "body": "放射線前後は専門歯科での洗浄・う蝕対策。抜歯はリスク評価が必要。ビスホス/デノスマブ使用中は要相談。",
+      "cancerIds": ["oral", "oropharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "nutrition",
+      "title": "体重減少を抑える栄養のコツ",
+      "category": "栄養・食事",
+      "body": "少量高カロリーを回数で。栄養補助飲料・油脂追加・間食。摂れない時は早めにNST/栄養士へ。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "nasal", "salivary"]
+    },
+    {
+      "id": "peg-ng",
+      "title": "経腸栄養（NG/PEG）の整備",
+      "category": "栄養・食事",
+      "body": "一時的に経腸栄養で休嚥下しつつリハ。皮膚・固定テープの清潔管理、詰まり防止のフラッシュを習慣に。",
+      "cancerIds": ["oropharynx", "hypopharynx", "nasopharynx", "larynx"]
+    },
+    {
+      "id": "pain",
+      "title": "痛みの段階的コントロール",
+      "category": "痛み",
+      "body": "アセトアミノフェン→NSAIDs→オピオイドの階段、便秘対策を併行。神経障害性痛には補助薬も相談。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "fatigue",
+      "title": "がん関連疲労（CRF）への向き合い方",
+      "category": "全身",
+      "body": "短時間の有酸素＋レジスタンス運動を週数回。睡眠衛生・昼寝は20–30分。甲状腺機能や貧血の評価も。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "mental",
+      "title": "不安・抑うつへのセルフヘルプ",
+      "category": "こころ",
+      "body": "呼吸法・マインドフルネス・ピアサポート。強い持続症状はサイコオンコロジー外来へ。睡眠薬は独断中止しない。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "work",
+      "title": "仕事・学業への復帰準備",
+      "category": "社会・制度",
+      "body": "主治医の就労配慮指示書を活用。段階的復職（短時間勤務）と在宅併用の交渉。声・嚥下の制限は具体的に伝える。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "financial",
+      "title": "公的支援・費用の助成",
+      "category": "社会・制度",
+      "body": "高額療養費・傷病手当金・身体障害者手帳・医療費控除を確認。地域のがん相談支援センターで個別相談を。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "caregiver",
+      "title": "家族・介護者の負担軽減",
+      "category": "家族",
+      "body": "役割を分担し“休む日”を作る。短時間レスパイト・訪問看護・地域包括支援を活用。情報共有ノートを1冊に。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "larynx", "salivary", "nasal"]
+    },
+    {
+      "id": "stoma-care",
+      "title": "気管孔（ストーマ）の日常管理",
+      "category": "呼吸・ストーマ",
+      "body": "加湿（HMEフィルタ等）と痰の湿性化。シャワー時はカバー。吸引器具の衛生保持、出血や異臭は早期相談。",
+      "cancerIds": ["larynx"]
+    },
+    {
+      "id": "shoulder",
+      "title": "副神経障害に伴う肩の痛み・挙上制限",
+      "category": "運動・拘縮",
+      "body": "早期からの肩甲帯安定化訓練と可動域維持。作業療法で日常生活の代償動作を学ぶ。",
+      "cancerIds": ["oral", "oropharynx", "hypopharynx", "nasopharynx", "salivary"]
+    },
+    {
+      "id": "smell",
+      "title": "嗅覚低下の“匂い訓練”",
+      "category": "感覚",
+      "body": "バラ・ユーカリ・レモン・クローブ等の香りを1日2回、数カ月継続。安全の範囲で実施。",
+      "cancerIds": ["nasal", "nasopharynx", "oral", "oropharynx"]
+    },
+    {
+      "id": "sun",
+      "title": "皮膚移植部・瘢痕部の紫外線対策",
+      "category": "皮膚ケア",
+      "body": "SPF30+の日焼け止め・帽子・スカーフ。色素沈着や瘢痕肥厚の悪化を防ぐ。屋外作業は時間帯を調整。",
+      "cancerIds": ["oral", "nasal", "salivary", "larynx"]
+    },
+    {
+      "id": "speech-aids",
+      "title": "構音の工夫（舌・口底切除後）",
+      "category": "嚥下・発声",
+      "body": "簡潔な語彙・ゆっくり話す・相手の理解を確認。キーボード/スマホ音声合成も併用。",
+      "cancerIds": ["oral"]
+    },
+    {
+      "id": "oral-bleeding",
+      "title": "口腔の出血・潰瘍時のセルフケア",
+      "category": "口腔ケア",
+      "body": "氷で冷却・清潔ガーゼで優しく圧迫。止血困難・広範な潰瘍は受診。抗凝固薬中は自己判断で中止しない。",
+      "cancerIds": ["oral", "oropharynx", "salivary"]
+    }
+  ],
   "histologies": [
     {
       "id": "adenoid-cystic",
       "name": "腺様嚢胞癌（Adenoid cystic carcinoma）",
-      "aliases": ["腺様嚢胞癌","腺様のう胞がん","ACC","adenoid cystic carcinoma","Adenoid-cystic carcinoma"],
-      "siteIds": ["salivary","nasal","oral"]
+      "aliases": ["腺様嚢胞癌", "腺様のう胞がん", "ACC", "adenoid cystic carcinoma", "Adenoid-cystic carcinoma"],
+      "siteIds": ["salivary", "nasal", "oral"]
     },
     {
       "id": "mucoepidermoid",
       "name": "粘表皮癌（Mucoepidermoid carcinoma）",
-      "aliases": ["粘表皮癌","粘表皮がん","MEC","mucoepidermoid carcinoma"],
-      "siteIds": ["salivary","nasal","oral","oropharynx"]
+      "aliases": ["粘表皮癌", "粘表皮がん", "MEC", "mucoepidermoid carcinoma"],
+      "siteIds": ["salivary", "nasal", "oral", "oropharynx"]
     },
     {
       "id": "mucosal-melanoma",
       "name": "悪性黒色腫（粘膜）",
-      "aliases": ["悪性黒色腫","メラノーマ","melanoma","mucosal melanoma","mucosal malignant melanoma"],
-      "siteIds": ["nasal","oral","oropharynx"]
+      "aliases": ["悪性黒色腫", "メラノーマ", "melanoma", "mucosal melanoma", "mucosal malignant melanoma"],
+      "siteIds": ["nasal", "oral", "oropharynx"]
     },
     {
       "id": "lymphoma",
       "name": "リンパ腫",
-      "aliases": ["リンパ腫","悪性リンパ腫","lymphoma"],
-      "siteIds": ["oropharynx","nasopharynx"]
+      "aliases": ["リンパ腫", "悪性リンパ腫", "lymphoma"],
+      "siteIds": ["oropharynx", "nasopharynx"]
     },
     {
       "id": "sarcoma",
       "name": "肉腫",
-      "aliases": ["肉腫","横紋筋肉腫","骨肉腫","線維肉腫","sarcoma"],
-      "siteIds": ["oral","nasal","oropharynx"]
+      "aliases": ["肉腫", "横紋筋肉腫", "骨肉腫", "線維肉腫", "sarcoma"],
+      "siteIds": ["oral", "nasal", "oropharynx"]
     }
   ]
 }
