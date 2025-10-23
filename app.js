@@ -1,25 +1,94 @@
 /* =================== グローバル状態 =================== */
+// 失敗時に必ず表示できる最小データ（保険）
+const DATA_FALLBACK = {
+  cancers: [
+    { id:"oral", name:"口腔がん（舌・口底など）", aliases:["口腔癌","舌がん","舌癌","歯肉がん","口底がん","oral cancer","C00","C01","C02","C03","C04","C05","C06"], icd:"C00-C06",
+      topics:[{title:"術後の発音・嚥下リハ",desc:"STと進めるホームエクササイズ"}],
+      links:[{title:"がん情報サービス（頭頸部）",url:"https://ganjoho.jp/public/cancer/head_neck/"}]
+    },
+    { id:"oropharynx", name:"中咽頭がん", aliases:["中咽頭癌","HPV関連がん","oropharyngeal cancer","C10"], icd:"C10" },
+    { id:"hypopharynx", name:"下咽頭がん", aliases:["下咽頭癌","hypopharyngeal cancer","C13"], icd:"C13" },
+    { id:"nasopharynx", name:"上咽頭がん", aliases:["上咽頭癌","NPC","nasopharyngeal carcinoma","C11"], icd:"C11" },
+    { id:"larynx", name:"喉頭がん", aliases:["喉頭癌","laryngeal cancer","C32"], icd:"C32",
+      topics:[{title:"発声代替",desc:"電気式人工喉頭・食道発声・シャント"}]
+    },
+    { id:"nasal", name:"鼻腔がん", aliases:["鼻腔癌","副鼻腔がん","鼻副鼻腔がん","nasal cancer","paranasal sinus cancer","C30","C31"], icd:"C30-C31" },
+    { id:"salivary", name:"唾液腺がん", aliases:["唾液腺癌","耳下腺がん","耳下腺癌","顎下腺がん","舌下腺がん","salivary gland cancer","parotid","C07","C08"], icd:"C07-C08" }
+  ],
+  treatments: [
+    {title:"がん情報サービス（頭頸部）", url:"https://ganjoho.jp/public/cancer/head_neck/", source:"国立がん研究センター",
+     cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]}
+  ],
+  life: [
+    {id:"oral-care",title:"放射線治療中の口腔ケア",category:"口腔ケア",body:"軟らかい歯ブラシ・フッ化物含嗽・無アルコールの洗口液。",cancerIds:["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]}
+  ]
+};
+
 let DATA = { cancers: [], treatments: [], life: [] };
+
+/* =================== 起動 =================== */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+async function boot(){
+  await loadData();         // データ取得（失敗時は FALLBACK）
+  initAll();                // 各UI初期化
+  // ハッシュで #community に来たら確実に初期化
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#community') ensureCommunityReady();
+  });
+}
 
 /* =================== データ読み込み =================== */
 async function loadData(){
+  let ok = false;
   try{
     const res = await fetch('./resources.json', { cache: 'no-store' });
-    if(!res.ok) throw new Error(`resources.json not found (${res.status})`);
-    DATA = await res.json();
-  }catch(err){
-    console.error('Failed to load resources.json', err);
+    if(res.ok){
+      const json = await res.json();
+      if (json && Array.isArray(json.cancers) && json.cancers.length){
+        DATA = json;
+        ok = true;
+      }
+    }
+  }catch(e){
+    console.warn('[loadData] fetch error', e);
   }
+  if(!ok){
+    console.warn('[loadData] using FALLBACK data');
+    DATA = DATA_FALLBACK;
+  }
+}
 
-  // 各UI初期化
+/* =================== 初期化まとめ =================== */
+function initAll(){
+  try { initTabs(); } catch(e){ console.warn('initTabs err', e); }
   try { initHome(); } catch(e){ console.warn('initHome err', e); }
   try { initCommunity(); } catch(e){ console.warn('initCommunity err', e); }
   try { initTreatments(); } catch(e){ console.warn('initTreatments err', e); }
   try { initLife(); } catch(e){ console.warn('initLife err', e); }
   try { renderBookmarks(); } catch(e){}
-
-  // コミュニティを開いた時に空なら流し込む保険
+  // コミュニティを開いた/表示されたら空でないように
   ensureCommunityReady();
+}
+
+/* =================== タブ切り替え =================== */
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tab = e.currentTarget.dataset.tab;
+      switchTab(tab);
+    });
+  });
+}
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(tab);
+  if(target) target.classList.add('active');
+  if (tab === 'community') ensureCommunityReady();
 }
 
 /* =================== ホーム（検索） =================== */
@@ -28,26 +97,26 @@ function initHome(){
   const input = document.getElementById('cancer-search');
   if(!list || !input) return;
 
-  // 表記ゆれ吸収
   const norm = (s) => (s || '')
     .toString()
     .toLowerCase()
-    .normalize('NFKC')          // 全角→半角など
-    .replace(/[ \u3000]/g, '')  // 半角/全角スペース除去
-    .replace(/癌腫/g, 'がんしゅ') // 先に長い語
-    .replace(/癌/g, 'がん')       // 癌 → がん
-    .replace(/ガン/g, 'がん');    // カタカナ → ひらがな
+    .normalize('NFKC')
+    .replace(/[ \u3000]/g, '')
+    .replace(/癌腫/g, 'がんしゅ')
+    .replace(/癌/g, 'がん')
+    .replace(/ガン/g, 'がん');
 
   function render(filterText=''){
     const f = norm(filterText);
     list.innerHTML = '';
 
-    if (!Array.isArray(DATA?.cancers) || DATA.cancers.length === 0) {
-      list.innerHTML = '<li>データが読み込めていません。resources.json とキャッシュをご確認ください。</li>';
+    const arr = Array.isArray(DATA?.cancers) ? DATA.cancers : [];
+    if (arr.length === 0) {
+      list.innerHTML = '<li>データが読み込めていません。FALLBACKに切り替わっていない場合はキャッシュを確認してください。</li>';
       return;
     }
 
-    const items = DATA.cancers.filter(c => {
+    const items = arr.filter(c => {
       if (!f) return true;
       const fields = [c.name, ...(c.aliases||[]), c.icd||''].map(norm).join('||');
       return fields.includes(f);
@@ -94,15 +163,13 @@ function initCommunity(){
   const wrap = document.getElementById('community-content');
   if(!sel || !wrap) return;
 
-  if (!Array.isArray(DATA?.cancers) || DATA.cancers.length === 0) {
-    // データ未読時は後で ensureCommunityReady が再実行
-    return;
-  }
+  // すでに埋まっていれば何もしない
+  if (sel.options && sel.options.length > 1) return;
 
-  // 初期化：プレースホルダー + 選択肢
+  const arr = Array.isArray(DATA?.cancers) ? DATA.cancers : [];
   sel.innerHTML = '';
   sel.insertAdjacentHTML('beforeend', `<option value="" disabled selected>がんの種類を選んでください</option>`);
-  DATA.cancers.forEach(c => {
+  arr.forEach(c => {
     sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
   });
 
@@ -113,10 +180,25 @@ function initCommunity(){
   });
 }
 
+function ensureCommunityReady(){
+  const sel = document.getElementById('community-select');
+  if(!sel) return;
+  const empty = !sel.options || sel.options.length <= 1;
+  if (empty) initCommunity();
+}
+
+function selectCancer(id){
+  const sel = document.getElementById('community-select');
+  if(!sel) return;
+  sel.value = id;
+  sel.dispatchEvent(new Event('change'));
+}
+
 function renderCommunityContent(cancerId){
   const wrap = document.getElementById('community-content');
   if(!wrap) return;
-  const cancer = (DATA.cancers||[]).find(c => c.id === cancerId);
+  const arr = Array.isArray(DATA?.cancers) ? DATA.cancers : [];
+  const cancer = arr.find(c => c.id === cancerId);
   if(!cancer){
     wrap.innerHTML = '<p class="meta">該当のがん種が見つかりませんでした。</p>';
     return;
@@ -136,66 +218,26 @@ function renderCommunityContent(cancerId){
       <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
       ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
     </div>
-    <div class="card">
-      <h3>話題・トピック</h3>
-      <ul class="list small">${topics}</ul>
-    </div>
-    <div class="card">
-      <h3>関連リンク</h3>
-      <ul class="list small">${links}</ul>
-    </div>
+    <div class="card"><h3>話題・トピック</h3><ul class="list small">${topics}</ul></div>
+    <div class="card"><h3>関連リンク</h3><ul class="list small">${links}</ul></div>
   `;
 
-  // 連動描画（任意）
+  // 連動（任意）
   try { filterTreatments(cancerId); } catch(e){}
   try { filterLife(cancerId); } catch(e){}
 }
 
-function selectCancer(id){
-  const sel = document.getElementById('community-select');
-  if(!sel) return;
-  sel.value = id;
-  sel.dispatchEvent(new Event('change'));
-}
-
-// コミュニティを開いたタイミングで空なら初期化
-function ensureCommunityReady(){
-  const sel = document.getElementById('community-select');
-  if(!sel) return;
-  const need = !sel.options || sel.options.length === 0 || (sel.options.length === 1 && !sel.value);
-  if(need && Array.isArray(DATA?.cancers) && DATA.cancers.length>0){
-    initCommunity();
-  }
-}
-
 /* =================== 治療リンク =================== */
-function initTreatments(){
-  const ul = document.getElementById('treatment-links');
-  if(!ul) return;
-
-  // 初期は全件表示
-  renderTreatmentsList();
-}
-
+function initTreatments(){ renderTreatmentsList(); }
 function renderTreatmentsList(filterId){
   const ul = document.getElementById('treatment-links');
   if(!ul) return;
   ul.innerHTML = '';
 
-  if(!Array.isArray(DATA?.treatments)) {
-    ul.innerHTML = '<li>データが読み込めていません。</li>';
-    return;
-  }
+  const arr = Array.isArray(DATA?.treatments) ? DATA.treatments : [];
+  const items = arr.filter(t => !filterId ? true : (Array.isArray(t.cancerIds) ? t.cancerIds.includes(filterId) : true));
 
-  const items = DATA.treatments.filter(t => {
-    if(!filterId) return true;
-    return Array.isArray(t.cancerIds) ? t.cancerIds.includes(filterId) : true;
-  });
-
-  if(items.length === 0){
-    ul.innerHTML = '<li>該当のリンクは見つかりませんでした。</li>';
-    return;
-  }
+  if(items.length === 0){ ul.innerHTML = '<li>該当のリンクは見つかりませんでした。</li>'; return; }
 
   items.forEach(t => {
     const li = document.createElement('li');
@@ -203,36 +245,19 @@ function renderTreatmentsList(filterId){
     ul.appendChild(li);
   });
 }
-
-function filterTreatments(id){
-  renderTreatmentsList(id);
-}
+function filterTreatments(id){ renderTreatmentsList(id); }
 
 /* =================== 生活の工夫 =================== */
-function initLife(){
-  // 初期は全件表示
-  renderLifeList();
-}
-
+function initLife(){ renderLifeList(); }
 function renderLifeList(filterId){
   const ul = document.getElementById('life-tips');
   if(!ul) return;
   ul.innerHTML = '';
 
-  if(!Array.isArray(DATA?.life)) {
-    ul.innerHTML = '<li>データが読み込めていません。</li>';
-    return;
-  }
+  const arr = Array.isArray(DATA?.life) ? DATA.life : [];
+  const items = arr.filter(x => !filterId ? true : (Array.isArray(x.cancerIds) ? x.cancerIds.includes(filterId) : true));
 
-  const items = DATA.life.filter(item => {
-    if(!filterId) return true;
-    return Array.isArray(item.cancerIds) ? item.cancerIds.includes(filterId) : true;
-  });
-
-  if(items.length === 0){
-    ul.innerHTML = '<li>該当のヒントは見つかりませんでした。</li>';
-    return;
-  }
+  if(items.length === 0){ ul.innerHTML = '<li>該当のヒントは見つかりませんでした。</li>'; return; }
 
   items.forEach(x => {
     const li = document.createElement('li');
@@ -240,36 +265,11 @@ function renderLifeList(filterId){
     ul.appendChild(li);
   });
 }
-
-function filterLife(id){
-  renderLifeList(id);
-}
+function filterLife(id){ renderLifeList(id); }
 
 /* =================== ブックマーク（ダミー） =================== */
 function renderBookmarks(){
   const ul = document.getElementById('bookmarks');
   if(!ul) return;
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
-}
-
-/* =================== タブ切り替え =================== */
-function switchTab(tab){
-  document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(tab);
-  if(target) target.classList.add('active');
-  if (tab === 'community') ensureCommunityReady();
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    const tab = e.currentTarget.dataset.tab;
-    switchTab(tab);
-  });
-});
-
-/* =================== 起動 =================== */
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadData);
-} else {
-  loadData();
 }
