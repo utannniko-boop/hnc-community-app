@@ -273,3 +273,188 @@ function renderBookmarks(){
   if(!ul) return;
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
+/* ======== ClinicalTrials.gov 連携：治験の自動取得 ======== */
+
+// がん種ID → 検索クエリのマッピング（必要に応じて調整可）
+const TRIAL_QUERY = {
+  oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
+  oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
+  hypopharynx: 'hypopharyngeal+OR+postcricoid+OR+"pyriform+sinus"',
+  nasopharynx: 'nasopharyngeal+OR+NPC',
+  larynx: 'laryngeal+OR+glottic+OR+supraglottic+OR+subglottic',
+  nasal: '"nasal+cavity"+OR+"paranasal+sinus"+OR+"maxillary+sinus"',
+  salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
+  _default: '"Head+and+Neck+Cancer"'
+};
+
+// ClinicalTrials.gov（v1 StudyFields API）から上位10件取得
+async function fetchTrialsByCancerId(cancerId){
+  const expr = TRIAL_QUERY[cancerId] || TRIAL_QUERY._default;
+  const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
+  const json = await res.json();
+  const rows = json?.StudyFieldsResponse?.StudyFields || [];
+  return rows.map(r => ({
+    id: r.NCTId?.[0],
+    title: r.BriefTitle?.[0],
+    cond: (r.Condition||[]).join(', '),
+    status: r.OverallStatus?.[0],
+    country: (r.LocationCountry||[]).join(', '),
+    updated: r.LastUpdatePostDate?.[0]
+  }));
+}
+
+async function loadTrials(cancerId){
+  const box = document.getElementById('trials');
+  if (!box) return;
+  box.innerHTML = '<div class="meta">読み込み中…</div>';
+  try {
+    const trials = await fetchTrialsByCancerId(cancerId);
+    if (!trials.length){
+      box.innerHTML = '<div class="meta">該当する治験が見つかりませんでした。</div>';
+      return;
+    }
+    box.innerHTML = `
+      <ul class="list small">
+        ${trials.map(t => `
+          <li>
+            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener"><strong>${escapeHtml(t.title || t.id)}</strong></a>
+            <div class="meta">ID: ${t.id} ／ 状況: ${escapeHtml(t.status||'')} ／ 更新: ${escapeHtml(t.updated||'')}</div>
+            ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
+          </li>
+        `).join('')}
+      </ul>`;
+  } catch (e){
+    console.error('trials error', e);
+    box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
+  }
+}
+
+// HTMLエスケープの小ユーティリティ
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ======== Supabase 投稿（匿名） ======== */
+// supabase-client.js に createClient 済み想定。未設定なら安全にスキップ。
+
+async function loadPosts(cancerId){
+  const ul = document.getElementById('post-list');
+  if (!ul) return;
+  // Supabase未設定なら案内
+  if (!window.supabase){
+    ul.innerHTML = '<li class="meta">投稿機能は未設定です（supabase-client.js にURLとAnonキーを設定すると有効化されます）。</li>';
+    return;
+  }
+  try{
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id, created_at, nick, body, cancer_id, hidden, reports')
+      .eq('hidden', false)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+    const items = (data || []).filter(p => !cancerId || p.cancer_id === cancerId);
+    if (!items.length){
+      ul.innerHTML = '<li class="meta">まだ投稿はありません。最初の投稿をどうぞ！</li>';
+      return;
+    }
+    ul.innerHTML = items.map(p => `
+      <li data-id="${p.id}">
+        <div><strong>${escapeHtml(p.nick || '匿名')}</strong> <span class="meta">${new Date(p.created_at).toLocaleString()}</span></div>
+        <div>${escapeHtml(p.body || '')}</div>
+        <div class="meta">
+          <button class="linklike" data-action="report">通報</button>
+        </div>
+      </li>
+    `).join('');
+
+    // 通報ボタン
+    ul.querySelectorAll('button[data-action="report"]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const li = e.target.closest('li[data-id]');
+        const id = li?.dataset.id;
+        if (!id) return;
+        try{
+          // reports を +1（しきい値はDB側のトリガーで非表示化がおすすめ）
+          const { data: d2, error: e2 } = await supabase
+            .from('posts')
+            .update({ reports: supabase.rpc ? undefined : undefined }) // noop for rpc-less
+            .eq('id', id)
+            .select();
+          // 代替: RPCがあれば使う（後述のSQL参照）
+          if (supabase.rpc){
+            await supabase.rpc('increment_reports', { post_id: id });
+          }
+          alert('通報しました。ありがとうございます。');
+        }catch(err){
+          console.error('report error', err);
+          alert('通報に失敗しました。時間をおいてお試しください。');
+        }
+      });
+    });
+
+  }catch(err){
+    console.error('loadPosts error', err);
+    ul.innerHTML = '<li class="meta">投稿の取得に失敗しました。</li>';
+  }
+}
+
+function initPosting(cancerIdProvider){
+  const form = document.getElementById('post-form');
+  const ul   = document.getElementById('post-list');
+  if(!form || !ul) return;
+
+  // Supabase未設定ならフォームごと案内
+  if (!window.supabase){
+    form.addEventListener('submit', (e)=>{ e.preventDefault(); alert('投稿機能は未設定です。supabase-client.js を設定してください。'); });
+    return;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nick = (document.getElementById('post-nick')?.value || '').trim();
+    const body = (document.getElementById('post-text')?.value || '').trim();
+    if (!body) { alert('本文を入力してください'); return; }
+
+    // 現在選択中のがん種ID（コミュニティタブと連動）
+    const cancerId = typeof cancerIdProvider === 'function' ? cancerIdProvider() : null;
+
+    try{
+      const { error } = await supabase.from('posts').insert({
+        nick: nick || null,
+        body,
+        cancer_id: cancerId || null
+      });
+      if (error) throw error;
+      (document.getElementById('post-text') || {}).value = '';
+      await loadPosts(cancerId);
+    }catch(err){
+      console.error('insert error', err);
+      alert('投稿に失敗しました。時間をおいてお試しください。');
+    }
+  });
+}
+
+/* ======== 既存の描画にフック ======== */
+// コミュニティ表示時に治験＆投稿を更新
+const __orig_renderCommunityContent = (typeof renderCommunityContent === 'function') ? renderCommunityContent : null;
+renderCommunityContent = function(cancerId){
+  if (__orig_renderCommunityContent) __orig_renderCommunityContent(cancerId);
+  // 治験を読みに行く
+  try { loadTrials(cancerId); } catch(e){}
+  // 投稿一覧を絞り込み
+  try { loadPosts(cancerId); } catch(e){}
+};
+
+// 初期化の最後で一度だけ投稿機能を有効化（選択中のがんIDを渡す）
+(function hookPostingInit(){
+  document.addEventListener('DOMContentLoaded', () => {
+    initPosting(() => {
+      const sel = document.getElementById('community-select');
+      return sel ? sel.value || null : null;
+    });
+  });
+})();
