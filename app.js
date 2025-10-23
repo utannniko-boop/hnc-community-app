@@ -458,3 +458,80 @@ renderCommunityContent = function(cancerId){
     });
   });
 })();
+
+/* ======== 強制ポピュレーター（コミュニティの候補が空でも必ず出す） ======== */
+(function forcePopulateCommunity(){
+  // 最低限の候補（resources.json が読めない時の保険）
+  const FALLBACK = [
+    { id:"oral",        name:"口腔がん（舌・口底など）" },
+    { id:"oropharynx",  name:"中咽頭がん" },
+    { id:"hypopharynx", name:"下咽頭がん" },
+    { id:"nasopharynx", name:"上咽頭がん" },
+    { id:"larynx",      name:"喉頭がん" },
+    { id:"nasal",       name:"鼻腔がん" },
+    { id:"salivary",    name:"唾液腺がん" }
+  ];
+
+  function getCancers(){
+    const arr = (window.DATA && Array.isArray(DATA.cancers) && DATA.cancers.length)
+      ? DATA.cancers
+      : FALLBACK;
+    return arr;
+  }
+
+  function populateOnce(){
+    const sel = document.getElementById('community-select');
+    if (!sel) return false;
+
+    // すでに埋まっていれば何もしない
+    if (sel.options && sel.options.length > 1) return true;
+
+    // プレースホルダー＋候補追加
+    sel.innerHTML = '';
+    sel.insertAdjacentHTML('beforeend', `<option value="" disabled selected>がんの種類を選んでください</option>`);
+    getCancers().forEach(c => {
+      sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
+    });
+
+    // change が未設定なら簡易の描画フックを付ける（既存の renderCommunityContent があればそちら優先）
+    if (!sel.__hnc_bound__) {
+      sel.addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (!id) return;
+        if (typeof renderCommunityContent === 'function') {
+          renderCommunityContent(id);
+        } else {
+          const wrap = document.getElementById('community-content');
+          if (!wrap) return;
+          const all = getCancers();
+          const hit = (window.DATA && Array.isArray(DATA.cancers))
+            ? DATA.cancers.find(x => x.id === id)
+            : all.find(x => x.id === id);
+          wrap.innerHTML = hit
+            ? `<div class="card"><h3>${hit.name}</h3><p class="meta">詳細は近日追加</p></div>`
+            : `<p class="meta">該当が見つかりませんでした。</p>`;
+        }
+      });
+      sel.__hnc_bound__ = true;
+    }
+    return true;
+  }
+
+  // 初回：DOM読み込み後に試行
+  document.addEventListener('DOMContentLoaded', () => {
+    // 何度かリトライ（他初期化より遅れても埋める）
+    const tries = [0, 200, 600, 1200];
+    tries.forEach(ms => setTimeout(populateOnce, ms));
+  });
+
+  // タブをコミュニティに切り替えたタイミングでも試行
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn[data-tab="community"]');
+    if (btn) setTimeout(populateOnce, 0);
+  });
+
+  // ハッシュで #community に来た時も試行（直接リンク対策）
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#community') setTimeout(populateOnce, 0);
+  });
+})();
