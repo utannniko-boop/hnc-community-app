@@ -2,10 +2,10 @@
    HNC Community PWA - app.js（全置換）
    - 部位検索＋組織型検索（histology）
    - 組織型から ClinicalTrials.gov を連動表示
-   - ClinicalTrials.gov 失敗時は JP/EN 横断検索リンクを自動提示
+   - ClinicalTrials.gov から介入名(薬剤等)も取得して表示
+   - API 失敗/0件時のみ JP/EN の補助検索リンクを提示
    - TRIAL_QUERY の重複定義をガード
    - resources.json が無くても FALLBACK で動く（cache-bust付）
-   - 503/一時障害向けにリトライ＋タイムアウト追加
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -490,53 +490,31 @@ function buildTrialsExpr({ cancerId=null, histologyId=null } = {}){
   return (CQ._default || '"Head+and+Neck+Cancer"');            // ③ デフォルト
 }
 
-/* ---------- ClinicalTrials.gov 呼び出し：リトライ付き ---------- */
-async function fetchJSONWithRetry(url, { retries = 3, baseDelay = 600, timeoutMs = 9000 } = {}) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-    try {
-      const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!res.ok) {
-        // 429/5xx はリトライ
-        if ([429, 500, 502, 503, 504].includes(res.status) && attempt < retries) {
-          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 250;
-          await new Promise(r => setTimeout(r, delay));
-          continue;
-        }
-        throw new Error(`HTTP ${res.status}`);
-      }
-      return await res.json();
-    } catch (e) {
-      clearTimeout(timer);
-      if (attempt < retries) {
-        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 250;
-        await new Promise(r => setTimeout(r, delay));
-        continue;
-      }
-      throw e;
-    }
-  }
-}
-
-/* ---------- ClinicalTrials.gov v1 StudyFields API（上位10件） ---------- */
+// ClinicalTrials.gov v1 StudyFields API（上位10件, 介入名も取得）
 async function fetchTrials(params = {}){
   const expr = buildTrialsExpr(params);
-  const url  = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
-  const json = await fetchJSONWithRetry(url, { retries: 3, baseDelay: 700, timeoutMs: 9000 });
+  const fields = [
+    'NCTId','BriefTitle','Condition','OverallStatus',
+    'InterventionName','LeadSponsorName','LocationCountry','LastUpdatePostDate'
+  ].join(',');
+  const url  = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=${fields}&min_rnk=1&max_rnk=10&fmt=json`;
+  const res  = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
+  const json = await res.json();
   const rows = json?.StudyFieldsResponse?.StudyFields || [];
   return rows.map(r => ({
     id: r.NCTId?.[0],
     title: r.BriefTitle?.[0],
     cond: (r.Condition||[]).join(', '),
     status: r.OverallStatus?.[0],
+    interventions: (r.InterventionName||[]).filter(Boolean),
+    sponsor: r.LeadSponsorName?.[0] || '',
     country: (r.LocationCountry||[]).join(', '),
     updated: r.LastUpdatePostDate?.[0]
-  }));
+  })).filter(x => !!x.id);
 }
 
-// ClinicalTrials.gov 失敗時のフォールバックリンクを生成
+// ClinicalTrials.gov 失敗/0件時のフォールバックリンクを生成（補助）
 function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
   const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
   const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
@@ -548,6 +526,7 @@ function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
   if (histo) {
     enKey = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || enKey;
   } else if (cancer) {
+    // 部位の英語ラベル粗推定
     const SITE_EN_LABELS = {
       oral: 'oral cavity cancer',
       oropharynx: 'oropharyngeal cancer',
@@ -565,8 +544,8 @@ function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
 
   box.innerHTML = `
     <div class="card">
-      <h3>自動検索リンク（代替表示）</h3>
-      <p class="meta">APIからの取得に失敗したため、検索リンクを提示します。</p>
+      <h3>自動検索リンク（補助）</h3>
+      <p class="meta">APIからの取得に失敗/0件だったため、検索リンクを提示します。</p>
       <ul class="list small">
         <li><a href="https://www.google.com/search?q=${qJP}" target="_blank" rel="noopener">Google（日本語）: 「${escapeHtml(jpKey)} 治験」</a></li>
         <li><a href="https://www.google.com/search?q=${qEN}" target="_blank" rel="noopener">Google（英語）: “${escapeHtml(enKey)} clinical trial”</a></li>
@@ -583,24 +562,32 @@ async function loadTrials(cancerId, { histologyId=null } = {}){
   try {
     const trials = await fetchTrials({ cancerId, histologyId });
     if (!trials.length){
-      // 0件時もフォールバック検索リンクを提示
-      renderTrialsFallback(box, { cancerId, histologyId });
+      renderTrialsFallback(box, { cancerId, histologyId }); // 0件時：補助リンク
       return;
     }
     box.innerHTML = `
       <ul class="list small">
         ${trials.map(t => `
           <li>
-            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener"><strong>${escapeHtml(t.title || t.id)}</strong></a>
-            <div class="meta">ID: ${t.id} ／ 状況: ${escapeHtml(t.status||'')} ／ 更新: ${escapeHtml(t.updated||'')}</div>
+            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener">
+              <strong>${escapeHtml(t.title || t.id)}</strong>
+            </a>
+            <div class="meta">
+              ID: ${t.id}
+              ${t.status ? ` ／ 状況: ${escapeHtml(t.status)}` : ''}
+              ${t.updated ? ` ／ 更新: ${escapeHtml(t.updated)}` : ''}
+            </div>
+            ${t.sponsor ? `<div class="meta">主担当機関: ${escapeHtml(t.sponsor)}</div>` : ''}
+            ${t.interventions && t.interventions.length ? `
+              <div class="meta">介入（薬剤・手技など）: ${t.interventions.map(escapeHtml).join(' / ')}</div>
+            ` : ''}
             ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
           </li>
         `).join('')}
       </ul>`;
   } catch (e){
     console.error('trials error', e);
-    // 失敗時はフォールバック検索リンク
-    renderTrialsFallback(box, { cancerId, histologyId });
+    renderTrialsFallback(box, { cancerId, histologyId }); // 失敗時：補助リンク
   }
 }
 
