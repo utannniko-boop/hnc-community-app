@@ -136,6 +136,7 @@
       navigator.serviceWorker.register('./service-worker.js');
     }
   </script>
+
   <!-- 念のため：初回アクセス時は #home に誘導 -->
   <script id="default-home">
     (function(){
@@ -145,6 +146,9 @@
         }
       } catch (e) {}
     })();
-<script src="./app.js"></script>
+  </script>
+
+  <!-- ここが重要！ 外に出す！ -->
+  <script src="./app.js"></script>
 </body>
 </html>
