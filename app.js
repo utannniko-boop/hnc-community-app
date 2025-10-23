@@ -1,10 +1,11 @@
 /* =========================================================
-   HNC Community PWA - app.js（全置換）
+   HNC Community PWA - app.js（全置換／分類自動補完つき）
    - 生活の工夫：手術/抗がん剤/放射線/その他 に分類＋検索
-   - 部位検索・組織型検索・治験表示（既存機能は維持）
+   - resources.json の life が未分類でもキーワードで自動分類（tx補完）
+   - タブ切替時にも最新の絞り込みを再描画
    ========================================================= */
 
-/* =================== グローバル状態 =================== */
+/* =================== 設定 =================== */
 const LIFE_GROUPS = {
   surgery:   { label: '手術', key: 'surgery' },
   chemo:     { label: '抗がん剤治療', key: 'chemo' },
@@ -12,6 +13,24 @@ const LIFE_GROUPS = {
   other:     { label: 'その他の治療', key: 'other' }
 };
 
+/* 自動分類用キーワード（NFKC/小文字/空白除去後で照合） */
+const KW = {
+  surgery: [
+    '手術','術後','切除','摘出','再建','皮弁','移植','縫合','開口','顎','顎運動','肩','副神経','気管孔','ストーマ','瘢痕','瘢痕部','創部'
+  ],
+  radiation: [
+    '放射線','照射','rt','radiation','放射線皮膚炎','粘膜炎','口内炎','唾液','口腔乾燥','線維化','頸部線維化','味覚','嗅覚','匂い訓練'
+  ],
+  chemo: [
+    '抗がん剤','化学療法','化学放射線','化放','cisplatin','シスプラチン','パクリタキセル','ドセタキセル','nab-paclitaxel',
+    '悪心','嘔吐','制吐','骨髄抑制','好中球','白血球','末梢神経','しびれ','脱毛'
+  ],
+  other: [
+    '痛み','鎮痛','疲労','栄養','経腸','peg','ng','リンパ浮腫','在宅','復職','就労','公的支援','家族','介護','メンタル','マインドフルネス','睡眠'
+  ]
+};
+
+/* =================== データ（FALLBACK） =================== */
 const DATA_FALLBACK = {
   cancers: [
     { id:"oral",        name:"口腔がん（舌・口底など）", aliases:["口腔癌","舌がん","舌癌","歯肉がん","口底がん","oral cancer","C00","C01","C02","C03","C04","C05","C06"], icd:"C00-C06",
@@ -32,44 +51,23 @@ const DATA_FALLBACK = {
      cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]}
   ],
   life: [
-    // --- 手術（surgery） ---
+    // 手術
     { id:"speech-aids", title:"構音の工夫（舌・口底切除後）", category:"嚥下・発声", body:"簡潔な語彙・ゆっくり・相手の理解確認。キーボード/スマホ音声合成も併用。", cancerIds:["oral"], tx:"surgery" },
     { id:"trismus", title:"開口障害（口が開きにくい）", category:"運動・拘縮", body:"術後は早期から開口訓練（指タテ・スティック）。“心地よい伸張”程度で継続。温罨法も可。", cancerIds:["oral","oropharynx","nasal","salivary"], tx:"surgery" },
-    { id:"shoulder", title:"副神経障害の肩痛・挙上制限", category:"運動・拘縮", body:"肩甲帯安定化訓練・可動域維持。作業療法で代償動作を学ぶ。", cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","salivary"], tx:"surgery" },
+    { id:"shoulder", title:"副神経障害の肩痛・挙上制限", category:"運動・拘縮", body:"肩甲帯安定化訓練・可動域維持。作業療法で代償動作。", cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","salivary"], tx:"surgery" },
     { id:"stoma-care", title:"気管孔（ストーマ）の日常管理", category:"呼吸・ストーマ", body:"HMEで加湿・痰の湿性化。シャワー時はカバー。出血・異臭は早期相談。", cancerIds:["larynx"], tx:"surgery" },
-    { id:"scar-uv", title:"瘢痕・移植部の紫外線対策", category:"皮膚ケア", body:"SPF30+・帽子・スカーフ。色素沈着や瘢痕肥厚の悪化を予防。", cancerIds:["oral","nasal","salivary","larynx"], tx:"surgery" },
-    { id:"oral-bleeding", title:"口腔の出血・潰瘍時のセルフケア", category:"口腔ケア", body:"氷で冷却→清潔ガーゼで圧迫。止血困難は受診。抗凝固薬は自己中止しない。", cancerIds:["oral","oropharynx","salivary"], tx:"surgery" },
-    { id:"jaw-physio", title:"顎・頸部の可動域訓練", category:"運動・拘縮", body:"術後早期から短時間×複数回のROM訓練。重い荷物・長時間同姿勢は回避。", cancerIds:["oral","oropharynx","hypopharynx","larynx"], tx:"surgery" },
-    { id:"swallow-st", title:"嚥下開始の目安と進め方", category:"嚥下・発声", body:"ST評価→段階的に開始。姿勢調整・増粘・一口量の最適化。", cancerIds:["oral","oropharynx","hypopharynx"], tx:"surgery" },
-
-    // --- 抗がん剤（chemo） ---
+    // 抗がん剤
     { id:"nausea", title:"悪心・嘔吐の対策", category:"栄養・食事", body:"少量高頻度・においの少ない冷食。処方制吐薬は前投与指示どおりに。", cancerIds:["*"], tx:"chemo" },
     { id:"taste-metal", title:"金属味・味覚変化", category:"栄養・食事", body:"プラ製スプーン・冷食・香りの活用（だし・ハーブ）。口腔ケア徹底。", cancerIds:["*"], tx:"chemo" },
-    { id:"diarrhea", title:"下痢・便秘のセルフケア", category:"消化器", body:"補水・電解質、食物繊維量の調整。整腸剤や下痢止めは医師と計画的に。", cancerIds:["*"], tx:"chemo" },
-    { id:"neuropathy", title:"末梢神経障害のしびれ・痛み", category:"神経", body:"冷え回避・安全対策（転倒予防）。日常生活の工夫と疼痛コントロールの相談。", cancerIds:["*"], tx:"chemo" },
     { id:"infection", title:"好中球減少時の感染対策", category:"感染予防", body:"手指衛生・人混み回避・発熱時は早期連絡。口内ケアで粘膜炎リスク低減。", cancerIds:["*"], tx:"chemo" },
-    { id:"oral-mucositis", title:"口内炎（粘膜炎）の痛み対策", category:"口腔ケア", body:"氷片・冷食・低刺激食。局所麻酔含嗽や鎮痛薬を医師と調整。", cancerIds:["oral","oropharynx","nasopharynx"], tx:"chemo" },
-    { id:"nutrition-chemo", title:"体重減少を抑える栄養", category:"栄養・食事", body:"少量高カロリー・補助飲料・間食。摂れない時は早めに栄養士へ。", cancerIds:["*"], tx:"chemo" },
-
-    // --- 放射線（radiation） ---
+    // 放射線
     { id:"oral-care-rt", title:"放射線治療中の口腔ケア基本", category:"口腔ケア", body:"やわらかめ歯ブラシ・フッ化物含嗽・無アルコール洗口液。粘膜炎時は圧を最小に。", cancerIds:["oral","oropharynx","nasopharynx","larynx","nasal","salivary"], tx:"radiation" },
-    { id:"mucositis-care", title:"口内炎（粘膜炎）の痛み対策", category:"口腔ケア", body:"辛味・酸味・熱いもの回避。冷却・麻酔含嗽・鎮痛薬で段階的に。", cancerIds:["oral","oropharynx","nasopharynx"], tx:"radiation" },
     { id:"xerostomia", title:"口腔乾燥（唾液減少）", category:"口腔ケア", body:"人工唾液・無糖ガム・加湿。う蝕予防に高濃度フッ化物。", cancerIds:["oral","oropharynx","nasopharynx","larynx","salivary"], tx:"radiation" },
     { id:"skin-rt", title:"放射線皮膚炎のスキンケア", category:"皮膚ケア", body:"低刺激保湿・摩擦と紫外線回避。びらん時は指示薬。民間療法は避ける。", cancerIds:["*"], tx:"radiation" },
-    { id:"neck-fibrosis", title:"頸部線維化のこわばり対策", category:"運動・拘縮", body:"ROM訓練を毎日短時間×複数回。重い荷物・同一姿勢の長時間化は避ける。", cancerIds:["oropharynx","hypopharynx","nasopharynx","larynx"], tx:"radiation" },
-    { id:"dental", title:"歯科フォロー（顎骨壊死予防）", category:"歯科", body:"放射線前後の専門歯科。抜歯はリスク評価。ビスホス/デノスマブ中は要相談。", cancerIds:["*"], tx:"radiation" },
-    { id:"smell-train", title:"嗅覚低下の匂い訓練", category:"感覚", body:"バラ/ユーカリ/レモン/クローブ等を1日2回、数か月継続。", cancerIds:["nasal","nasopharynx","oral","oropharynx"], tx:"radiation" },
-
-    // --- その他（other） ---
-    { id:"voice-prosthesis", title:"発声の選択肢（喉頭摘後）", category:"嚥下・発声", body:"電気式人工喉頭・食道発声・シャント。衛生管理や交換時期は指導に従う。", cancerIds:["larynx"], tx:"other" },
+    // その他
     { id:"lymphedema", title:"顔面・頸部リンパ浮腫セルフケア", category:"むくみ", body:"スキンケア→軽擦→頸部誘導。圧迫は医療者の指導下で。感染兆候は受診。", cancerIds:["*"], tx:"other" },
-    { id:"peg-ng", title:"経腸栄養（NG/PEG）の整備", category:"栄養・食事", body:"皮膚・固定テープ清潔。詰まり防止の定期フラッシュ。休嚥下中もリハ継続。", cancerIds:["oropharynx","hypopharynx","nasopharynx","larynx"], tx:"other" },
     { id:"pain", title:"痛みの段階的コントロール", category:"痛み", body:"アセトアミノフェン→NSAIDs→オピオイド＋便秘対策。神経障害性痛は補助薬も。", cancerIds:["*"], tx:"other" },
-    { id:"fatigue", title:"がん関連疲労（CRF）", category:"全身", body:"短時間の有酸素＋レジスタンスを週数回。睡眠衛生・短時間昼寝。", cancerIds:["*"], tx:"other" },
-    { id:"mental", title:"不安・抑うつのセルフヘルプ", category:"こころ", body:"呼吸法・マインドフルネス・ピアサポート。強い症状は専門外来へ。", cancerIds:["*"], tx:"other" },
     { id:"work", title:"仕事・学業への復帰準備", category:"社会・制度", body:"就労配慮指示書・段階的復職・在宅併用の交渉。制限は具体的に伝える。", cancerIds:["*"], tx:"other" },
-    { id:"financial", title:"公的支援・費用助成", category:"社会・制度", body:"高額療養費・傷病手当金・障害者手帳・医療費控除。相談支援センター活用。", cancerIds:["*"], tx:"other" },
-    { id:"caregiver", title:"家族・介護者の負担軽減", category:"家族", body:"役割分担・休む日を作る。訪問看護・レスパイト・地域包括を活用。", cancerIds:["*"], tx:"other" },
   ],
   histologies: [
     { id:"adenoid-cystic", name:"腺様嚢胞癌（Adenoid cystic carcinoma）",
@@ -110,6 +108,7 @@ async function boot(){
   initAll();
   window.addEventListener('hashchange', () => {
     if (location.hash === '#community') ensureCommunityReady();
+    if (location.hash === '#life') renderLifeList(); // タブ直遷移でも更新
   });
 }
 
@@ -125,10 +124,11 @@ async function loadData(){
         if (!Array.isArray(DATA.histologies)) {
           DATA.histologies = DATA_FALLBACK.histologies;
         }
-        // life に tx が無いデータが来ても壊れないよう補完
-        if (Array.isArray(DATA.life)) {
-          DATA.life = DATA.life.map(x => ({ ...x, tx: x.tx || 'other' }));
+        if (!Array.isArray(DATA.life) || DATA.life.length === 0) {
+          DATA.life = DATA_FALLBACK.life;
         }
+        // ここで life の tx を自動補完
+        DATA.life = normalizeLifeItems(DATA.life);
         ok = true;
       }
     }
@@ -137,8 +137,29 @@ async function loadData(){
   }
   if(!ok){
     console.warn('[loadData] using FALLBACK data');
-    DATA = { ...DATA_FALLBACK };
+    DATA = { ...DATA_FALLBACK, life: normalizeLifeItems(DATA_FALLBACK.life) };
   }
+}
+
+/* ===== 自動分類（tx補完） ===== */
+function normalizeLifeItems(list){
+  const norm = (s)=>String(s||'').toLowerCase().normalize('NFKC').replace(/[ \u3000]/g,'');
+  function guessTx(item){
+    const text = norm(`${item.title} ${item.category||''} ${item.body||''}`);
+    const hit = (set)=> set.some(k => text.includes(norm(k)));
+    if (hit(KW.surgery))   return 'surgery';
+    if (hit(KW.radiation)) return 'radiation';
+    if (hit(KW.chemo))     return 'chemo';
+    if (hit(KW.other))     return 'other';
+    // 口腔ケア系は放射線に寄せることが多い
+    if (norm(item.category||'').includes('口腔')) return 'radiation';
+    return 'other';
+  }
+  return (list||[]).map(x => {
+    const tx = x.tx || guessTx(x);
+    const cancerIds = Array.isArray(x.cancerIds) ? x.cancerIds : ['*'];
+    return { ...x, tx, cancerIds };
+  });
 }
 
 /* =================== 初期化まとめ =================== */
@@ -168,6 +189,7 @@ function switchTab(tab){
   const target = document.getElementById(tab);
   if(target) target.classList.add('active');
   if (tab === 'community') ensureCommunityReady();
+  if (tab === 'life') renderLifeList(); // ここで必ず更新
 }
 
 /* =================== ホーム（部位検索） =================== */
@@ -512,7 +534,7 @@ function initLife(){
     }
     wrap.__bound__ = true;
   }
-  renderLifeList();
+  renderLifeList(); // 初回描画
 }
 
 function renderLifeList(filterCancerId = null, opt = {}){
@@ -569,14 +591,11 @@ function renderLifeList(filterCancerId = null, opt = {}){
       </div>`;
   };
 
-  const html = [
-    sec('surgery', groups.surgery),
-    sec('chemo', groups.chemo),
-    sec('radiation', groups.radiation),
-    sec('other', groups.other)
-  ].join('');
+  const html = (cat === 'all')
+    ? [sec('surgery', groups.surgery), sec('chemo', groups.chemo), sec('radiation', groups.radiation), sec('other', groups.other)].join('')
+    : sec(cat, groups[cat]);
 
-  host.innerHTML = html || `<div class="meta">該当する項目が見つかりませんでした。</div>`;
+  host.innerHTML = html || `<div class="meta">該当する項目が見つかりませんでした。キーワードやカテゴリを変えてお試しください。</div>`;
 }
 function filterLife(id){
   const search = document.getElementById('life-search');
@@ -585,7 +604,7 @@ function filterLife(id){
   renderLifeList(id, { q, cat });
 }
 
-/* ========== ClinicalTrials.gov 連携（既存機能：簡略表記のまま） ========== */
+/* ========== ClinicalTrials.gov 連携（簡略：既存のまま） ========== */
 const EN_SYNONYMS = {
   oral: ['oral cavity cancer','tongue cancer','floor of mouth cancer','buccal mucosa cancer','gingival cancer'],
   oropharynx: ['oropharyngeal cancer','tonsil cancer','base of tongue cancer'],
@@ -823,72 +842,6 @@ function renderTrialsList(host, trials){
   `;
 }
 
-function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
-  const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
-  const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
-
-  const SITE_EN_LABELS = {
-    oral:'oral cavity cancer', oropharynx:'oropharyngeal cancer', hypopharynx:'hypopharyngeal cancer',
-    nasopharynx:'nasopharyngeal carcinoma', larynx:'laryngeal cancer', nasal:'nasal cavity or paranasal sinus cancer',
-    salivary:'salivary gland cancer'
-  };
-
-  const narrowJP = histo?.aliases?.[0] || histo?.name || cancer?.name || '頭頸部がん';
-  let narrowEN = 'head and neck cancer';
-  if (histo) {
-    narrowEN = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || narrowEN;
-  } else if (cancer) {
-    narrowEN = SITE_EN_LABELS[cancer.id] || narrowEN;
-  }
-
-  let broadJP = '頭頸部がん';
-  let broadEN = 'head and neck cancer';
-  if (histologyId === 'adenoid-cystic' || histologyId === 'mucoepidermoid' || cancerId === 'salivary') {
-    broadJP = '唾液腺がん'; broadEN = 'salivary gland cancer';
-  }
-
-  const qJPa = encodeURIComponent(`${narrowJP} 治験`);
-  const qENa = encodeURIComponent(`${narrowEN} clinical trial`);
-  const qJPb = encodeURIComponent(`${broadJP} 治験`);
-  const qENb = encodeURIComponent(`${broadEN} clinical trial`);
-
-  box.innerHTML = `
-    <div class="card">
-      <h3>自動検索リンク（補助）</h3>
-      <p class="meta">API取得に失敗/0件のため、狭い・広い両方の候補を提示します。</p>
-      <ul class="list small">
-        <li><strong>狭い：</strong> <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPa}">Google（日本語）</a> ／ <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENa}">Google（英語）</a> ／ <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENa}">CT.gov 内検索</a></li>
-        <li><strong>広い：</strong> <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPb}">Google（日本語）</a> ／ <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENb}">Google（英語）</a> ／ <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENb}">CT.gov 内検索</a></li>
-      </ul>
-    </div>
-  `;
-}
-
-async function loadTrials(cancerId, { histologyId=null } = {}){
-  const box = document.getElementById('trials');
-  if (!box) return;
-
-  box.innerHTML = '';
-  renderTrialsControls(box);
-  const host = document.createElement('div');
-  host.id = 'trials-list-host';
-  box.appendChild(host);
-  host.innerHTML = '<div class="meta">読み込み中…</div>';
-
-  try {
-    const trials = await fetchTrials({ cancerId, histologyId });
-    __TRIALS_CACHE = trials.slice();
-    if (!trials.length){
-      renderTrialsFallback(box, { cancerId, histologyId });
-      return;
-    }
-    renderTrialsList(host, trials);
-  } catch (e){
-    console.error('trials error', e);
-    renderTrialsFallback(box, { cancerId, histologyId });
-  }
-}
-
 /* =================== ブックマーク（ダミー） =================== */
 function renderBookmarks(){
   const ul = document.getElementById('bookmarks');
@@ -918,7 +871,7 @@ function escapeHtml(s){
       ? DATA.cancers
       : FALLBACK;
     return arr;
-    }
+  }
 
   function populateOnce(){
     const sel = document.getElementById('community-select');
