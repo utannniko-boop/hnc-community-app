@@ -1,311 +1,262 @@
 /* =========================================================
-   HNC Community PWA - style.css（春の桜トーン）
-   白ベース + 淡い桜色 + 金色ラインの上品なUI
+   HNC Community PWA - style.css（桜テーマ・全置換）
+   Palette: 白 + 桜（淡桃）+ 金アクセント
    ========================================================= */
 
+/* ---------- Design Tokens ---------- */
 :root{
-  /* ベース */
-  --bg: #fffefe;                 /* ほぼ白 */
-  --surface: #ffffff;            /* カード背景 */
-  --text: #3e2e33;               /* 落ち着いた濃ブラウン */
-  --muted: #8a797f;              /* 補助文字 */
+  /* Base */
+  --bg: #fff;
+  --bg-soft: #fff7fb;         /* ほんのり桜 */
+  --panel: #ffffff;
+  --text: #2a2430;            /* 少し紫みの黒 */
+  --text-muted: #6f6273;
 
-  /* 線・装飾（淡桃＋金） */
-  --border: #f3dfe6;             /* 薄い桜ピンクの境界線 */
-  --gold: #d9b76b;               /* 上品な金色（線・アクセント） */
-  --gold-weak: #ead7a6;          /* 淡い金 */
-  --sakura: #f7cfe0;             /* 桜の淡桃 */
-  --sakura-deep: #f3b7cd;        /* 少し濃い桜 */
+  /* Sakura */
+  --sakura-50:  #fff7fb;
+  --sakura-100: #feeef6;
+  --sakura-200: #fde3ef;
+  --sakura-300: #fbcfe8;
+  --sakura-400: #f5a9c6;
+  --sakura-500: #ee85ad;      /* 基調ピンク（控えめ） */
 
-  /* アクション色（桜トーン） */
-  --primary: #f2a7be;            /* 桜色 */
-  --primary-600: #ea86a6;
-  --primary-700: #d76d90;
+  /* Gold accent */
+  --gold-300: #f2e6c8;
+  --gold-400: #e7d7a7;
+  --gold-500: #d8bf6e;
 
-  --success:#7fb88e;
-  --warning:#f3b86d;
-  --danger:#e76574;
+  /* Borders / shadows */
+  --line: #f0dbe6;
+  --line-strong: #e9cfe0;
+  --shadow: 0 6px 18px rgba(170, 120, 150, .12);
 
-  --radius: 16px;
-  --shadow: 0 10px 28px rgba(217, 183, 107, 0.10);     /* ほのかな金影 */
-  --shadow-sm: 0 6px 18px rgba(217, 183, 107, 0.08);
+  /* Buttons / States */
+  --primary: var(--sakura-500);
+  --primary-ink: #7f2b50;
+  --primary-hover: #e36f9f;
+
+  --ring: #eaa8c2;
+  --ring-strong: #e374a4;
+
+  /* Radii / Spacing */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 20px;
+
+  --gap-1: 6px;
+  --gap-2: 10px;
+  --gap-3: 14px;
+  --gap-4: 18px;
 }
 
-/* ダークモード（夜桜・ローズゴールド） */
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg: #1d1518;               /* 夜の桜のような深い色 */
-    --surface: #24191d;
-    --text: #f8eef1;
-    --muted: #d2b9c0;
-
-    --border: #4a3239;
-    --gold: #e5c88a;
-    --gold-weak: #c9a96b;
-    --sakura: #b86a89;
-    --sakura-deep: #a85574;
-
-    --primary: #f2b6c9;
-    --primary-600: #ed9cb5;
-    --primary-700: #df819c;
-
-    --shadow: 0 10px 28px rgba(0,0,0,0.45);
-    --shadow-sm: 0 6px 18px rgba(0,0,0,0.35);
-  }
-}
-
-/* 余計な動きが苦手な方向け */
-@media (prefers-reduced-motion: reduce){
-  *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
-}
-
-/* -------- ベース -------- */
-*{ box-sizing: border-box; }
+/* ---------- Reset-ish ---------- */
+* { box-sizing: border-box; }
 html,body{ height:100%; }
-html{ scroll-behavior:smooth; }
+html{ -webkit-text-size-adjust: 100%; }
 body{
-  margin:0;
-  font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  margin:0; padding:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
-  /* うっすら桜の空気感（淡桃グラデ + 金の柔光） */
   background:
-    radial-gradient(1200px 600px at 90% -10%, rgba(242, 167, 190, .12), transparent 60%),
-    radial-gradient(1200px 700px at -10% 0%, rgba(250, 236, 240, .9), transparent 60%),
-    linear-gradient(180deg, #fff, var(--bg) 60%);
-  line-height: 1.75;
+    radial-gradient(1000px 400px at 80% -100px, var(--sakura-50), transparent 60%),
+    radial-gradient(900px 380px at -10% -120px, var(--sakura-100), transparent 60%),
+    var(--bg);
+  line-height: 1.65;
 }
 
-.container{
-  width:min(980px, 100%);
-  margin: 24px auto 64px;
-  padding: 0 16px;
-}
-
-/* -------- ヘッダー / ナビ -------- */
+/* ---------- Topbar ---------- */
 .topbar{
-  position: sticky;
-  top:0;
-  z-index: 50;
-  backdrop-filter: saturate(1.1) blur(8px);
-  background:
-    linear-gradient(180deg, color-mix(in oklab, #fff 92%, var(--sakura) 8%), transparent),
-    color-mix(in oklab, var(--surface) 90%, transparent);
-  border-bottom: 1px solid var(--gold-weak);
-  box-shadow: inset 0 -1px 0 var(--gold-weak);
+  position: sticky; top:0; z-index: 50;
+  display:flex; align-items:center; justify-content:space-between; gap: 12px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
 }
 .topbar h1{
-  margin: 0;
-  padding: 16px 16px 8px;
-  font-size: clamp(18px, 2.1vw, 22px);
-  letter-spacing: .03em;
-  color: var(--primary-700);
-}
-.topbar nav{
-  display:flex; gap:8px; flex-wrap:wrap;
-  padding: 0 12px 12px;
+  margin:0; font-size: clamp(18px, 3.2vw, 22px); font-weight: 800;
+  letter-spacing: .02em;
+  background: linear-gradient(90deg, #c25b86, #d8a1b9 60%, #b27a47);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* -------- ボタン -------- */
-.tab-btn, button, .linklike{ -webkit-tap-highlight-color: transparent; }
+/* ---------- Nav (tabs) ---------- */
+nav{ display:flex; gap: 8px; flex-wrap: wrap; }
 
 .tab-btn{
-  appearance:none;
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 10%, #fff), #fff);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 9px 16px;
-  font: inherit;
-  letter-spacing: .02em;
-  box-shadow: var(--shadow-sm);
+  appearance:none; border:1px solid var(--line);
+  background: linear-gradient(#fff, #fff9fd);
+  padding: 8px 12px; border-radius: 999px;
+  font-weight: 600; color: var(--primary-ink);
+  transition: transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,.02);
   cursor: pointer;
-  transition: transform .06s ease, background .25s, border-color .25s, box-shadow .25s;
 }
-.tab-btn:hover{
-  transform: translateY(-1px);
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 18%, #fff), #fff);
-  border-color: color-mix(in oklab, var(--gold) 35%, var(--border));
-}
-.tab-btn:active{ transform: translateY(0); }
-.tab-btn.is-active, .tab-btn[aria-current="page"]{
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 26%, #fff), #fff);
-  border-color: var(--gold);
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--gold) 60%, transparent) inset, var(--shadow-sm);
+.tab-btn:hover{ border-color: var(--line-strong); box-shadow: 0 2px 10px rgba(200,120,160,.12); }
+.tab-btn:active{ transform: translateY(1px) scale(.99); }
+.tab-btn:focus-visible{
+  outline: none; box-shadow: 0 0 0 3px var(--ring);
 }
 
-/* キーボード操作のフォーカス */
-:focus-visible{
-  outline: 3px solid color-mix(in oklab, var(--gold) 55%, transparent);
-  outline-offset: 2px;
-  border-radius: 12px;
+/* ---------- Layout ---------- */
+.container{
+  max-width: 980px; margin: 24px auto; padding: 0 16px;
+  display: grid; gap: 16px;
 }
+.tab{ display:none; }
+.tab.active{ display:block; animation: fadeIn .22s ease; }
+@keyframes fadeIn{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none;} }
 
-/* -------- カード -------- */
+/* ---------- Cards ---------- */
 .card{
-  background:
-    linear-gradient(180deg, #fff, color-mix(in oklab, var(--sakura) 4%, #fff) 90%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin: 14px 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   box-shadow: var(--shadow);
+  padding: 16px 16px;
 }
 .card.highlight{
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 16%, #fff), #fff 75%);
-  border-color: color-mix(in oklab, var(--gold) 40%, var(--border));
-  box-shadow: 0 10px 30px rgba(250, 210, 230, .25);
+  background: linear-gradient(180deg, var(--sakura-50), #fff);
+  border-color: var(--gold-300);
 }
 .card h2, .card h3{
-  margin: 0 0 10px;
-  color: color-mix(in oklab, var(--primary-700) 65%, var(--text));
-  letter-spacing: .02em;
+  margin: 0 0 10px; line-height: 1.35;
 }
-.card .disclaimer{ font-size:13px; color: var(--muted); margin-top:8px; }
+.card h2{ font-size: clamp(18px, 3.4vw, 22px); }
+.card h3{ font-size: clamp(17px, 3.2vw, 20px); }
 
-/* -------- 区切り・装飾の金ライン -------- */
-.card::before{
-  content:"";
-  display:block;
-  height: 3px;
-  margin: -18px -18px 12px;
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: linear-gradient(90deg, transparent, var(--gold) 12%, var(--gold-weak) 60%, transparent);
-  opacity: .35;
+.disclaimer{
+  background: #fff1f6; border-left: 4px solid var(--primary); padding: 8px 10px;
+  border-radius: var(--r-sm);
 }
 
-/* -------- リスト / メタ / バッジ -------- */
-.list{ list-style:none; margin: 10px 0 0; padding: 0; }
-.list > li{
-  padding: 10px 0;
-  border-top: 1px dashed color-mix(in oklab, var(--sakura) 35%, var(--border));
+/* ---------- Lists ---------- */
+.list{ list-style: none; padding: 0; margin: 0; }
+.list li{
+  padding: 10px 8px;
+  border-bottom: 1px dashed var(--line);
 }
-.list > li:first-child{ border-top: none; }
+.list li:last-child{ border-bottom: 0; }
+.list.small li{ padding: 8px 6px; }
 
-.list.small > li{ padding: 8px 0; font-size: 14px; }
+.meta{ color: var(--text-muted); font-size: .92rem; }
 
-.meta{ color: var(--muted); font-size: 13px; }
-
+/* ---------- Badges / Links ---------- */
 .badge{
-  display: inline-block;
-  font-size: 12px;
-  padding: 2px 8px;
-  margin-left: 6px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in oklab, var(--gold) 45%, var(--border));
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 22%, #fff), #fff);
-  color: var(--text);
+  display: inline-block; padding: 2px 8px;
+  border-radius: 999px; font-size: .78rem; font-weight: 700;
+  color: var(--primary-ink);
+  background: var(--sakura-100); border:1px solid var(--line-strong);
 }
+.linklike{
+  appearance:none; border:0; background:transparent; padding:0; cursor:pointer;
+  color: #8d3e6a; text-decoration: underline; text-underline-offset: 3px;
+}
+a{ color: #8d3e6a; }
+a:hover{ color: #7a345a; }
 
-/* -------- 入力・フォーム -------- */
-input, textarea, select{
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, #fff, color-mix(in oklab, var(--sakura) 6%, #fff));
-  color: var(--text);
+/* ---------- Inputs & Forms ---------- */
+input, select, textarea, button{
   font: inherit;
-  transition: border-color .25s, box-shadow .25s, background .25s;
 }
-input::placeholder, textarea::placeholder{
-  color: color-mix(in oklab, var(--muted) 85%, transparent);
-}
-input:focus, textarea:focus, select:focus{
-  border-color: color-mix(in oklab, var(--gold) 50%, var(--border));
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--sakura) 28%, transparent);
-  outline: none;
-}
-
-form{ display: grid; gap: 10px; }
-button[type="submit"].tab-btn{
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--primary) 80%, #fff), var(--primary));
-  color:#fff;
-  border-color: color-mix(in oklab, var(--gold) 45%, var(--primary-600));
-}
-button[type="submit"].tab-btn:hover{
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--primary) 90%, #fff), var(--primary-600));
-}
-
-/* -------- タブ本体 -------- */
-.tab{ display:none; }
-.tab.active{ display:block; }
-
-/* -------- トピック（開閉） -------- */
-.topic-item{ }
-.topic-toggle{
+input[type="text"], input[type="search"], input:not([type]),
+input[type="email"], input[type="password"], textarea, select{
   width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px dashed color-mix(in oklab, var(--sakura) 40%, var(--border));
-  background:
-    linear-gradient(180deg, #fff, color-mix(in oklab, var(--sakura) 10%, #fff));
-  cursor: pointer;
-  transition: box-shadow .25s, background .25s;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 10px 12px; background: #fff;
+  transition: border-color .15s ease, box-shadow .2s ease;
 }
-.topic-toggle:hover{
-  background:
-    linear-gradient(180deg, #fff, color-mix(in oklab, var(--sakura) 16%, #fff));
-  box-shadow: 0 6px 18px rgba(242, 167, 190, .20);
-}
-.topic-body{
-  border-left: 3px solid color-mix(in oklab, var(--gold) 50%, var(--border));
-  margin-left: 6px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background:
-    linear-gradient(180deg, #fff, color-mix(in oklab, var(--sakura) 12%, #fff));
+select{ background: linear-gradient(#fff, #fff9fd); }
+input:focus, textarea:focus, select:focus{
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
-/* -------- 検索入力のアクセント -------- */
-#cancer-search{
-  background:
-    linear-gradient(0deg, color-mix(in oklab, var(--sakura) 9%, #fff), color-mix(in oklab, var(--sakura) 9%, #fff)) padding-box,
-    linear-gradient(120deg, color-mix(in oklab, var(--gold) 55%, transparent), transparent 60%) border-box;
-  border: 1px solid transparent;
+/* 提出ボタン（フォーム内） */
+form .tab-btn[type="submit"]{
+  background: linear-gradient(180deg, var(--sakura-300), var(--sakura-200));
+  border-color: var(--line-strong);
 }
-#cancer-search:focus{
-  background:
-    linear-gradient(0deg, #fff, #fff) padding-box,
-    linear-gradient(120deg, color-mix(in oklab, var(--gold) 70%, transparent), transparent 60%) border-box;
+form .tab-btn[type="submit"]:hover{
+  background: linear-gradient(180deg, var(--sakura-400), var(--sakura-300));
 }
 
-/* -------- フッター -------- */
+/* ---------- Section helpers ---------- */
 .footer{
-  text-align: center;
-  color: var(--muted);
-  padding: 24px 12px 40px;
-  border-top: 1px solid var(--gold-weak);
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--sakura) 10%, #fff), #fff);
+  margin: 18px 0 40px;
+  text-align: center; color: var(--text-muted);
 }
 
-/* -------- レスポンシブ -------- */
-@media (min-width: 780px){
-  .topbar nav{ gap:10px; }
-  .card{ padding: 22px; }
+/* ---------- Trials セクション（既存強化CSSと親和） ---------- */
+#trials .list-title{
+  margin: 12px 4px 6px; font-size: .95rem; color:#7a4e6a;
+}
+#trials .trial{
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: #fff; margin: 8px 0; padding: 10px 10px;
+  transition: box-shadow .2s ease, transform .05s ease;
+}
+#trials .trial:hover{ box-shadow: var(--shadow); }
+#trials .trial .title{ font-weight: 700; text-decoration: none; }
+#trials .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.badge.pill{ background: var(--sakura-100); border:1px solid var(--line-strong); }
+
+/* アコーディオン */
+#trials .trial.acc .acc-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; cursor:pointer; }
+#trials .trial.acc .acc-body{ display:none; margin-top:8px; }
+#trials .trial.acc[data-acc="open"] .acc-body{ display:block; }
+
+/* Trials のフィルタバー（sticky） */
+.trials-controls{
+  position: sticky; top: calc(56px + 6px); /* topbarの下 */
+  z-index: 5;
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 12px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.88); backdrop-filter: blur(6px);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.trials-controls label{ margin-right: 12px; white-space: nowrap; }
+.trials-controls .seg{ display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.trials-controls .seg-btn{
+  padding: 6px 12px; border: none; background: transparent; cursor: pointer;
+  font-size: 0.92rem;
+}
+.trials-controls .seg-btn.active{ background: var(--sakura-100); }
+
+/* ---------- “桜×金” の装飾線（見出し下に細い金ライン） ---------- */
+.card h2::after, .card h3::after{
+  content:""; display:block; height: 2px; width: 56px; margin-top: 6px;
+  background: linear-gradient(90deg, var(--gold-500), var(--gold-300));
+  border-radius: 2px;
 }
 
-/* クリック感強調（微妙な陰影） */
-button, .tab-btn, .topic-toggle{ transition: transform .06s ease, box-shadow .25s ease; }
-button:hover, .tab-btn:hover, .topic-toggle:hover{
-  box-shadow: 0 8px 22px rgba(217, 183, 107, .14);
-}
-button:active, .tab-btn:active, .topic-toggle:active{
-  transform: translateY(1px);
+/* ---------- Utility ---------- */
+.badge.success{ background:#e8f9ef; border-color:#c9eed8; color:#2a7b4f; }
+.badge.warn{ background:#fff7e6; border-color:#f2e6c8; color:#7b5a2a; }
+
+.grid{ display:grid; gap: 14px; }
+@media (min-width: 900px){
+  .grid.cols-2{ grid-template-columns: 1fr 1fr; }
+  .grid.cols-3{ grid-template-columns: repeat(3, 1fr); }
 }
 
-/* フォーカスリングの可視化（アクセシビリティ） */
-:focus-visible{
-  outline: 3px solid color-mix(in oklab, var(--gold) 55%, transparent);
-  outline-offset: 2px;
-  border-radius: 12px;
+/* ---------- Focus Ring for clickable texts ---------- */
+a:focus-visible, .linklike:focus-visible, .tab-btn:focus-visible{
+  outline: none; box-shadow: 0 0 0 3px var(--ring-strong);
+  border-radius: 8px;
+}
+
+/* ---------- Small tweaks for admin area ---------- */
+#admin-auth .badge{ background: var(--sakura-100); border-color: var(--line-strong); }
+
+/* ---------- Home: search inputs spacing ---------- */
+#home .card input#cancer-search,
+#home .card input#histo-search{ margin-bottom: 10px; }
+
+/* ---------- Print nice ---------- */
+@media print{
+  .topbar, nav, .footer { display:none !important; }
+  body{ background:#fff !important; }
+  .container{ max-width: 100%; margin:0; padding:0; }
+  .card{ box-shadow:none; border-color:#ddd; }
 }
