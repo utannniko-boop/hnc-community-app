@@ -6,13 +6,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>頭頸部がんコミュニティ</title>
 
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#f3b7c5" />
-  <link rel="icon" href="icon.png" />
-  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="icon" href="./icon.png" />
+  <link rel="apple-touch-icon" href="./icon.png" />
 
-  <!-- ★ バージョンを v=32 に統一（SW の PRECACHE と合わせる） -->
-  <link id="main-css" rel="stylesheet" href="style.css?v=32" />
+  <!-- 外部CSS（まずはこれを使う） -->
+  <link id="main-css" rel="stylesheet" href="./style.css?v=33" />
+
+  <!-- フォールバック用：外部CSSが死んでも最低限の見た目は出す -->
+  <style id="critical-inline">
+    :root{--pink:#f7dbe4;--ink:#223;--muted:#667;--bg:#fff;}
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--ink);background:#fafafa}
+    .topbar{position:sticky;top:0;background:linear-gradient(90deg,#f6c8d8,#f0e6ef);padding:10px 12px;border-bottom:1px solid #e7c;z-index:10}
+    .topbar h1{margin:0;font-size:18px}
+    .topbar nav{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+    .topbar .tab-btn{border:0;background:#fff;padding:6px 10px;border-radius:8px;box-shadow:0 1px 0 rgba(0,0,0,.05);cursor:pointer}
+    .hero{background:#fff;padding:18px 12px;border-bottom:1px solid #eee}
+    .hero .meta{color:var(--muted);margin:0}
+    .container{max-width:980px;margin:20px auto;padding:0 12px}
+    .grid-2{display:grid;gap:16px;grid-template-columns:1fr; }
+    @media(min-width:900px){.grid-2{grid-template-columns:1fr 1fr}}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px}
+    .card.highlight{border-color:#f3b7c5;background:#fff8fb}
+    input,textarea,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
+    .list{list-style:none;margin:10px 0 0;padding:0}
+    .list li{padding:10px;border-bottom:1px dashed #eee}
+    .badge{display:inline-block;background:#ffe9f1;color:#a03962;border:1px solid #f3b7c5;border-radius:999px;padding:2px 8px;font-size:12px;vertical-align:baseline}
+    .meta{color:#667;font-size:13px}
+    .bottom-nav{position:sticky;bottom:0;background:#fff;border-top:1px solid #eee;padding:8px;display:flex;gap:8px;justify-content:space-around}
+    .bottom-nav .tab-btn{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:8px 12px}
+    .footer{color:#667;text-align:center;margin:40px 0 20px}
+    .petal-field{height:0}
+    /* 非読込検知バナー */
+    #css-repair{display:none;position:fixed;left:10px;right:10px;bottom:10px;background:#fff8fb;border:1px solid #f3b7c5;border-radius:12px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);z-index:9999}
+    #css-repair button{background:#a03962;color:#fff;border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
+  </style>
+
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
 </head>
 <body>
@@ -30,7 +60,6 @@
     </nav>
   </header>
 
-  <!-- ヒーロー帯（花びらアニメ） -->
   <section class="hero">
     <div class="hero-inner">
       <h2>春の桜テーマでやさしく。</h2>
@@ -48,7 +77,6 @@
           <p class="disclaimer">⚠ 医療情報の正確性には配慮していますが、<strong>医師の診断・治療に代わるものではありません</strong>。気になる症状・治療方針は必ず主治医にご相談ください。</p>
         </div>
 
-        <!-- 統合検索 -->
         <div class="card">
           <h3>🔎 統合検索（部位・組織型・治験・生活）</h3>
           <input id="global-search" placeholder="例：耳下腺癌 / 腺様嚢胞癌 / C32 / oropharyngeal ..." />
@@ -76,7 +104,6 @@
       </div>
     </section>
 
-    <!-- コミュニティ -->
     <section id="community" class="tab">
       <div class="card">
         <h2>コミュニティ（種類別）</h2>
@@ -103,7 +130,6 @@
       </div>
     </section>
 
-    <!-- 治療情報 -->
     <section id="treatments" class="tab">
       <div class="card">
         <h2>治療の最新情報（外部リンク集）</h2>
@@ -112,7 +138,6 @@
       </div>
     </section>
 
-    <!-- 生活の工夫 -->
     <section id="life" class="tab">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
@@ -121,7 +146,6 @@
       </div>
     </section>
 
-    <!-- このアプリ -->
     <section id="about" class="tab">
       <div class="card">
         <h2>このアプリについて</h2>
@@ -139,7 +163,6 @@
       </div>
     </section>
 
-    <!-- 管理 -->
     <section id="admin" class="tab">
       <div class="card">
         <h2>モデレーター管理</h2>
@@ -167,7 +190,6 @@
     <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
-  <!-- モバイル底ナビ -->
   <nav class="bottom-nav">
     <button class="tab-btn" data-tab="home">ホーム</button>
     <button class="tab-btn" data-tab="community">コミュニティ</button>
@@ -177,32 +199,81 @@
 
   <!-- Supabase（未設定なら無害） -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="supabase-client.js"></script>
+  <script type="module" src="./supabase-client.js"></script>
 
-  <!-- SW 登録（★ v=32 を付けて確実に更新させる） -->
+  <!-- Service Worker（v=33 で確実更新） -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js?v=32');
+    if ('serviceWorker' in navigator && !location.search.includes('no-sw=1')) {
+      navigator.serviceWorker.register('./service-worker.js?v=33');
     }
   </script>
 
   <!-- 初回は #home へ -->
   <script>
     (function(){
-      try {
-        if (!location.hash || location.hash === '#admin') location.hash = '#home';
-      } catch (e) {}
+      try { if (!location.hash || location.hash === '#admin') location.hash = '#home'; } catch (e) {}
     })();
   </script>
 
-  <!-- アプリ本体（★ v=32 に統一） -->
-  <script src="./app.js?v=32"></script>
+  <!-- アプリ本体 -->
+  <script src="./app.js?v=33"></script>
 
-  <!-- 花びら生成（軽量JS / CSSアニメ駆動） -->
+  <!-- CSS 読み込み監視：失敗時は修復UI表示＋代替ロード -->
+  <div id="css-repair">
+    <strong>デザインが反映されていませんか？</strong>
+    <p class="meta">ボタンを押すと、古い Service Worker とキャッシュを削除して再読み込みします。</p>
+    <button id="btn-repair">修復して再読み込み</button>
+  </div>
+  <script>
+    (function(){
+      // CSSが当たっているかを簡易チェック
+      const probe = document.createElement('div');
+      probe.className = 'topbar';
+      probe.style.position = 'absolute';
+      probe.style.visibility = 'hidden';
+      document.body.appendChild(probe);
+      setTimeout(async () => {
+        const bg = getComputedStyle(probe).backgroundImage + getComputedStyle(probe).backgroundColor;
+        const styled = bg && bg !== 'none' && !bg.includes('rgba(0, 0, 0, 0)');
+        document.body.removeChild(probe);
+
+        if (!styled) {
+          // 外部CSSをクエリ無しで再試行（相対パス差異や SW の古キャッシュ対策）
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = './style.css';
+          document.head.appendChild(link);
+          document.getElementById('css-repair').style.display = 'block';
+        }
+      }, 500);
+
+      // ワンクリック修復
+      document.getElementById('btn-repair').addEventListener('click', async () => {
+        try {
+          // SWを全解除
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+          }
+          // すべてのCacheを削除
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        } catch (e) {}
+        // SW無効で再読込（no-sw=1 フラグ）
+        const u = new URL(location.href);
+        u.searchParams.set('no-sw', '1');
+        location.href = u.toString();
+      });
+    })();
+  </script>
+
+  <!-- 花びら（軽量JS / CSSは任意） -->
   <script>
     (function makePetals(){
       const field = document.getElementById('petals'); if(!field) return;
-      const N = 24; // 花びら数
+      const N = 24;
       for(let i=0; i<N; i++){
         const s = document.createElement('span');
         s.className = 'petal';
@@ -217,37 +288,6 @@
         s.style.setProperty('--dur', dur);
         field.appendChild(s);
       }
-    })();
-
-    // --- CSS ロードの簡易チェック（読み込み失敗の早期検知用） ---
-    (function(){
-      const marker = document.createElement('div');
-      marker.className = 'topbar';
-      marker.style.position = 'absolute';
-      marker.style.visibility = 'hidden';
-      document.body.appendChild(marker);
-
-      // 500ms 後に computed を見て、CSS が当たっていなければクエリなしでもう一度ロード
-      setTimeout(() => {
-        const cs = getComputedStyle(marker);
-        const looksStyled = cs && cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)';
-        if (!looksStyled) {
-          // フォールバック: バージョン無しで再ロード（ローカル/サブディレクトリ配信での食い違い対策）
-          const l = document.getElementById('main-css');
-          if (l) {
-            const href0 = l.getAttribute('href');
-            const plain = 'style.css';
-            if (!href0.endsWith(plain)) {
-              const alt = document.createElement('link');
-              alt.rel = 'stylesheet';
-              alt.href = plain;
-              document.head.appendChild(alt);
-              console.warn('[css] fallback loaded:', alt.href);
-            }
-          }
-        }
-        document.body.removeChild(marker);
-      }, 500);
     })();
   </script>
 </body>
