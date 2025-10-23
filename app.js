@@ -124,17 +124,34 @@ function initAll(){
 
 /* =================== タブ切り替え =================== */
 function initTabs(){
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // ヘッダーとフッターのナビだけを対象にする
+  const navButtons = document.querySelectorAll('header .tab-btn[data-tab], .bottom-nav .tab-btn[data-tab]');
+  navButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const tab = e.currentTarget.dataset.tab;
+      if (!tab) return;
       switchTab(tab);
     });
   });
 }
+
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(tab);
-  if(target) target.classList.add('active');
+  // 表示切替
+  document.querySelectorAll('.tab').forEach(s => {
+    const isActive = (s.id === tab);
+    s.classList.toggle('active', isActive);
+    s.setAttribute('aria-hidden', String(!isActive));
+  });
+
+  // ARIA: 選択状態を更新（任意）
+  document.querySelectorAll('header .tab-btn[data-tab], .bottom-nav .tab-btn[data-tab]').forEach(b => {
+    b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+  });
+
+  // URLハッシュも更新（リロードや共有でも該当タブに着地できる）
+  try { location.hash = `#${tab}`; } catch(e) {}
+
   if (tab === 'community') ensureCommunityReady();
 }
 
