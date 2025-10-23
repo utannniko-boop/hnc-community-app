@@ -273,10 +273,20 @@ function renderCommunityContent(cancerId){
   const aliases=(c.aliases||[]).join('・');
   const topics=(c.topics||[]).map(t=>`<li><strong>${t.title}</strong><div class="meta">${t.desc||''}</div></li>`).join('') || '<li>トピック準備中</li>';
   const links=(c.links||[]).map(l=>`<li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>`).join('') || '<li>関連リンク準備中</li>';
-  wrap.innerHTML=`
-    <div class="card"><h3>${c.name} <span class="badge">${c.icd||''}</span></h3>${aliases?`<div class="meta">別名：${aliases}</div>`:''}</div>
-    <div class="card"><h3>話題・トピック</h3><ul class="list small">${topics}</ul></div>
-    <div class="card"><h3>関連リンク</h3><ul class="list small">${links}</ul></div>
+   wrap.innerHTML = `
+    <div class="card">
+      <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
+      ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
+    </div>
+    <div class="card">
+      <h3>話題・トピック</h3>
+      <ul id="community-topics" class="list small">${topicsHTML}</ul>
+    </div>
+    <div class="card">
+      <h3>関連リンク</h3>
+      <ul class="list small">${linksHTML}</ul>
+    </div>
+    ${renderKnowledgeCardsHTML({ cancerId, histologyId: window.HISTO_CONTEXT || null })}
   `;
 }
 
