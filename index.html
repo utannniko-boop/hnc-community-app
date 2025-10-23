@@ -38,6 +38,10 @@
     .bottom-nav .tab-btn{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:8px 12px}
     .footer{color:#667;text-align:center;margin:40px 0 20px}
     .petal-field{height:0}
+    /* ▼ これが無いとタブ切替が「見た目上」効きません */
+    .tab{display:none}
+    .tab.active{display:block}
+
     /* 非読込検知バナー */
     #css-repair{display:none;position:fixed;left:10px;right:10px;bottom:10px;background:#fff8fb;border:1px solid #f3b7c5;border-radius:12px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);z-index:9999}
     #css-repair button{background:#a03962;color:#fff;border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
@@ -51,12 +55,13 @@
   <header class="topbar">
     <h1>頭頸部がんコミュニティ</h1>
     <nav>
-      <button class="tab-btn" data-tab="home">ホーム</button>
-      <button class="tab-btn" data-tab="community">コミュニティ</button>
-      <button class="tab-btn" data-tab="treatments">治療情報</button>
-      <button class="tab-btn" data-tab="life">生活の工夫</button>
-      <button class="tab-btn" data-tab="about">このアプリ</button>
-      <button class="tab-btn" data-tab="admin">管理</button>
+      <!-- type=button を付け、ARIAも付与（任意） -->
+      <button type="button" class="tab-btn" data-tab="home" aria-controls="home" aria-selected="true">ホーム</button>
+      <button type="button" class="tab-btn" data-tab="community" aria-controls="community">コミュニティ</button>
+      <button type="button" class="tab-btn" data-tab="treatments" aria-controls="treatments">治療情報</button>
+      <button type="button" class="tab-btn" data-tab="life" aria-controls="life">生活の工夫</button>
+      <button type="button" class="tab-btn" data-tab="about" aria-controls="about">このアプリ</button>
+      <button type="button" class="tab-btn" data-tab="admin" aria-controls="admin">管理</button>
     </nav>
   </header>
 
@@ -69,7 +74,7 @@
   </section>
 
   <main class="container">
-    <section id="home" class="tab active">
+    <section id="home" class="tab active" aria-hidden="false">
       <div class="grid-2">
         <div class="card highlight">
           <h2>ようこそ</h2>
@@ -104,7 +109,7 @@
       </div>
     </section>
 
-    <section id="community" class="tab">
+    <section id="community" class="tab" aria-hidden="true">
       <div class="card">
         <h2>コミュニティ（種類別）</h2>
         <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
@@ -130,7 +135,7 @@
       </div>
     </section>
 
-    <section id="treatments" class="tab">
+    <section id="treatments" class="tab" aria-hidden="true">
       <div class="card">
         <h2>治療の最新情報（外部リンク集）</h2>
         <p>信頼できる一次情報へのリンク集です。最新情報は各サイトでご確認ください。</p>
@@ -138,7 +143,7 @@
       </div>
     </section>
 
-    <section id="life" class="tab">
+    <section id="life" class="tab" aria-hidden="true">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
         <p>術後ケア、嚥下・発声、口腔ケア、栄養、仕事や学業への復帰などのヒントをまとめています。</p>
@@ -146,7 +151,7 @@
       </div>
     </section>
 
-    <section id="about" class="tab">
+    <section id="about" class="tab" aria-hidden="true">
       <div class="card">
         <h2>このアプリについて</h2>
         <p>このアプリはオープンソースのPWAです。<a href="#" id="export-data">データをJSONで書き出す</a> / <label class="linklike"><input type="file" id="import-data" accept="application/json" hidden/>JSONから読み込む</label></p>
@@ -163,7 +168,7 @@
       </div>
     </section>
 
-    <section id="admin" class="tab">
+    <section id="admin" class="tab" aria-hidden="true">
       <div class="card">
         <h2>モデレーター管理</h2>
         <div id="admin-auth">
@@ -191,10 +196,10 @@
   </footer>
 
   <nav class="bottom-nav">
-    <button class="tab-btn" data-tab="home">ホーム</button>
-    <button class="tab-btn" data-tab="community">コミュニティ</button>
-    <button class="tab-btn" data-tab="treatments">治療</button>
-    <button class="tab-btn" data-tab="life">生活</button>
+    <button type="button" class="tab-btn" data-tab="home" aria-controls="home">ホーム</button>
+    <button type="button" class="tab-btn" data-tab="community" aria-controls="community">コミュニティ</button>
+    <button type="button" class="tab-btn" data-tab="treatments" aria-controls="treatments">治療</button>
+    <button type="button" class="tab-btn" data-tab="life" aria-controls="life">生活</button>
   </nav>
 
   <!-- Supabase（未設定なら無害） -->
