@@ -2,31 +2,18 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>頭頸部がんコミュニティ</title>
-
-  <!-- 相対パス安定化（GitHub Pages 等のサブパスでもOK） -->
-  <base href="./">
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f3b7c5" />
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
+
+  <!-- ★ バージョンを v=32 に統一（SW の PRECACHE と合わせる） -->
+  <link id="main-css" rel="stylesheet" href="style.css?v=32" />
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
-
-  <!-- クリティカルCSS: 最低限の初期レイアウト（必要なら削ってOK） -->
-  <style>
-    :root{--border:#e5e7eb}
-    html,body{margin:0}
-    .topbar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);padding:10px 16px}
-    .topbar h1{font:600 16px/1.4 system-ui;margin:0}
-    .container{max-width:1100px;margin:0 auto;padding:16px}
-    .tab{display:none}.tab.active{display:block}
-  </style>
-
-  <!-- CSS を preload → onload で stylesheet 化（初回描画をブロックしない） -->
-  <link rel="preload" as="style" href="./style.css?v=32" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="./style.css?v=32"></noscript>
 </head>
 <body>
   <noscript>このアプリを利用するには JavaScript を有効にしてください。</noscript>
@@ -190,32 +177,17 @@
 
   <!-- Supabase（未設定なら無害） -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer type="module" src="supabase-client.js"></script>
+  <script type="module" src="supabase-client.js"></script>
 
-  <!-- SW 登録（バージョン付き。旧キャッシュの影響を受けにくくする） -->
-  <script defer>
-    (function(){
-      if (!('serviceWorker' in navigator)) return;
-      const swUrl = './service-worker.js?v=32';
-      navigator.serviceWorker.register(swUrl, { updateViaCache: 'none', scope: './' })
-        .then(reg => {
-          // 新SWが見つかったら更新を促進
-          if (reg.waiting) { reg.waiting.postMessage({type:'SKIP_WAITING'}); }
-          reg.addEventListener('updatefound', () => {
-            const nw = reg.installing;
-            if (nw) nw.addEventListener('statechange', () => {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                console.info('[SW] new version installed');
-              }
-            });
-          });
-        })
-        .catch(err => console.warn('[SW] register failed', err));
-    })();
+  <!-- SW 登録（★ v=32 を付けて確実に更新させる） -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js?v=32');
+    }
   </script>
 
   <!-- 初回は #home へ -->
-  <script defer>
+  <script>
     (function(){
       try {
         if (!location.hash || location.hash === '#admin') location.hash = '#home';
@@ -223,14 +195,14 @@
     })();
   </script>
 
-  <!-- アプリ本体（バージョンでキャッシュ破壊） -->
-  <script defer src="./app.js?v=32"></script>
+  <!-- アプリ本体（★ v=32 に統一） -->
+  <script src="./app.js?v=32"></script>
 
   <!-- 花びら生成（軽量JS / CSSアニメ駆動） -->
-  <script defer>
+  <script>
     (function makePetals(){
       const field = document.getElementById('petals'); if(!field) return;
-      const N = 24;
+      const N = 24; // 花びら数
       for(let i=0; i<N; i++){
         const s = document.createElement('span');
         s.className = 'petal';
@@ -245,6 +217,37 @@
         s.style.setProperty('--dur', dur);
         field.appendChild(s);
       }
+    })();
+
+    // --- CSS ロードの簡易チェック（読み込み失敗の早期検知用） ---
+    (function(){
+      const marker = document.createElement('div');
+      marker.className = 'topbar';
+      marker.style.position = 'absolute';
+      marker.style.visibility = 'hidden';
+      document.body.appendChild(marker);
+
+      // 500ms 後に computed を見て、CSS が当たっていなければクエリなしでもう一度ロード
+      setTimeout(() => {
+        const cs = getComputedStyle(marker);
+        const looksStyled = cs && cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)';
+        if (!looksStyled) {
+          // フォールバック: バージョン無しで再ロード（ローカル/サブディレクトリ配信での食い違い対策）
+          const l = document.getElementById('main-css');
+          if (l) {
+            const href0 = l.getAttribute('href');
+            const plain = 'style.css';
+            if (!href0.endsWith(plain)) {
+              const alt = document.createElement('link');
+              alt.rel = 'stylesheet';
+              alt.href = plain;
+              document.head.appendChild(alt);
+              console.warn('[css] fallback loaded:', alt.href);
+            }
+          }
+        }
+        document.body.removeChild(marker);
+      }, 500);
     })();
   </script>
 </body>
