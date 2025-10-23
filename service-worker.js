@@ -1,5 +1,5 @@
 // service-worker.js（GitHub Pages対応・相対パス版）
-const VERSION = 'hnc-app-v7'; // ← 数字を変えるとキャッシュが確実に更新されます
+const VERSION = 'hnc-app-v8'; // ← 数字を変えるとキャッシュが確実に更新されます
 const ASSETS = [
   './',
   './index.html',
