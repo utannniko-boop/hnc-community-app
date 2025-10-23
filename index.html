@@ -2,117 +2,153 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="x-ua-compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>頭頸部がんコミュニティ</title>
 
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#f7dbe3" />
-  <link rel="icon" href="icon.png" />
-  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#f3b7c5" />
+  <link rel="icon" href="./icon.png" />
+  <link rel="apple-touch-icon" href="./icon.png" />
 
-  <link rel="stylesheet" href="style.css?v=38" />
-  <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫、治験・論文検索まで網羅した無料PWAアプリ" />
+  <!-- 外部CSS（キャッシュ破壊は v=33 のまま） -->
+  <link id="main-css" rel="stylesheet" href="./style.css?v=33" />
+
+  <!-- 最低限の見た目（外部CSS不調時の保険） -->
   <style>
-    :root{--ink:#223;--muted:#667}
-    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:var(--ink)}
+    :root{--pink:#f7dbe4;--ink:#223;--muted:#667;--bg:#fff;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--ink);background:#fafafa}
     .topbar{position:sticky;top:0;background:linear-gradient(90deg,#f6c8d8,#f0e6ef);padding:10px 12px;border-bottom:1px solid #e7c;z-index:10}
     .topbar h1{margin:0;font-size:18px}
     .topbar nav{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-    .topbar .tab-btn{border:0;background:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
-    .tab-btn.active{outline:2px solid #a03962}
+    .topbar .tab-btn{border:0;background:#fff;padding:6px 10px;border-radius:8px;box-shadow:0 1px 0 rgba(0,0,0,.05);cursor:pointer}
+    .topbar .tab-btn.active{outline:2px solid #a03962}
+    .hero{background:#fff;padding:18px 12px;border-bottom:1px solid #eee}
+    .hero .meta{color:var(--muted);margin:0}
     .container{max-width:980px;margin:20px auto;padding:0 12px}
+    .grid-2{display:grid;gap:16px;grid-template-columns:1fr}
+    @media(min-width:900px){.grid-2{grid-template-columns:1fr 1fr}}
     .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px;margin-bottom:16px}
-    .meta{color:var(--muted);font-size:13px}
-    .list{list-style:none;margin:8px 0 0;padding:0}
-    .list li{padding:8px 0;border-bottom:1px dashed #eee}
+    .card.highlight{border-color:#f3b7c5;background:#fff8fb}
+    input,textarea,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
+    .list{list-style:none;margin:10px 0 0;padding:0}
+    .list li{padding:10px;border-bottom:1px dashed #eee}
     .badge{display:inline-block;background:#ffe9f1;color:#a03962;border:1px solid #f3b7c5;border-radius:999px;padding:2px 8px;font-size:12px}
+    .meta{color:#667;font-size:13px}
     .tab{display:none}.tab.active{display:block}
-    .subtabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-    .subtabs .life-btn{border:1px solid #eee;background:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
-    .subtabs .life-btn.active{background:#fff8fb;border-color:#f3b7c5}
-    select,input{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
+    .footer{color:#667;text-align:center;margin:40px 0 20px}
+    .bottom-nav{position:sticky;bottom:0;background:#fff;border-top:1px solid #eee;padding:8px;display:flex;gap:8px;justify-content:space-around}
+    .bottom-nav .tab-btn{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:8px 12px}
+    .petal-field{height:0}
   </style>
+
+  <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫、治験・論文検索までを集約した無料PWAアプリ" />
 </head>
 <body>
+  <noscript>このアプリを利用するには JavaScript を有効にしてください。</noscript>
+
   <header class="topbar">
-    <h1>🌸 頭頸部がんコミュニティ</h1>
+    <h1>頭頸部がんコミュニティ</h1>
     <nav>
       <button class="tab-btn" data-tab="home">ホーム</button>
       <button class="tab-btn" data-tab="community">コミュニティ</button>
       <button class="tab-btn" data-tab="treatments">治療情報</button>
       <button class="tab-btn" data-tab="life">生活の工夫</button>
       <button class="tab-btn" data-tab="about">このアプリ</button>
+      <button class="tab-btn" data-tab="admin">管理</button>
     </nav>
   </header>
+
+  <!-- ヒーロー帯 -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h2>春の桜テーマでやさしく。</h2>
+      <p class="meta">匿名で安心。部位でも組織型でも、治験や生活の工夫まで一つの場所で。</p>
+    </div>
+    <div class="petal-field" id="petals"></div>
+  </section>
 
   <main class="container">
     <!-- ホーム -->
     <section id="home" class="tab active">
-      <div class="card">
-        <h2>ようこそ</h2>
-        <p>ここは、頭頸部がんに関する正確な知識と経験を安全に共有する無料のWebアプリです。</p>
-        <p class="meta">⚠ 医療情報は参考であり、診断や治療は必ず医師にご相談ください。</p>
+      <div class="grid-2">
+        <div class="card highlight">
+          <h2>ようこそ</h2>
+          <p>頭頸部がんに関する情報と経験を<strong>安全に・匿名で</strong>シェアするための、無料コミュニティ型Webアプリです（オフライン対応）。</p>
+          <p class="disclaimer">⚠ 医療情報は参考であり、<strong>診断や治療は医師へ</strong>ご相談ください。</p>
+        </div>
+
+        <!-- 統合検索 -->
+        <div class="card">
+          <h3>🔎 統合検索（部位・組織型・治験・論文）</h3>
+          <input id="global-search" placeholder="例：耳下腺癌 / 腺様嚢胞癌 / C32 / oropharyngeal ..." />
+          <ul id="global-results" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>がんの種類で探す（部位）</h3>
+          <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん、耳下腺癌、C32…" />
+          <ul id="cancer-list" class="list"></ul>
+        </div>
+
+        <div class="card">
+          <h3>組織型で探す（histology）</h3>
+          <input id="histo-search" placeholder="例：腺様嚢胞癌 / 粘表皮癌 / メラノーマ…" />
+          <ul id="histo-list" class="list"></ul>
+        </div>
       </div>
 
       <div class="card">
-        <h3>🔍 統合検索（部位 / 組織型 / 治験・論文）</h3>
-        <input id="global-search" placeholder="例：喉頭がん / 腺様嚢胞癌 / MEC / C32 / oropharyngeal ..." />
-        <!-- ★ デモ文は削除。入力時に app.js がここへ結果を描画 -->
-        <ul id="global-results" class="list"></ul>
+        <h3>ブックマーク</h3>
+        <ul id="bookmarks" class="list small"></ul>
       </div>
     </section>
 
     <!-- コミュニティ -->
     <section id="community" class="tab">
       <div class="card">
-        <h2>コミュニティ</h2>
-        <p class="meta">がん種と（必要なら）組織型を選ぶと、根拠リンク／研究リンク／治験を自動表示します。</p>
-        <div style="display:grid; gap:8px; grid-template-columns:1fr; margin:8px 0;">
-          <select id="community-select"></select>
-          <select id="histology-select"></select>
-        </div>
+        <h2>コミュニティ（種類別）</h2>
+        <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
+        <select id="community-select"></select>
         <div id="community-content"></div>
       </div>
 
       <div class="card">
-        <h3>根拠とガイドライン</h3>
-        <ul id="evidence-links" class="list"></ul>
+        <h3>最新の治験・研究</h3>
+        <p class="meta">ClinicalTrials.gov の自動取得に加え、失敗時はJP/ENの横断検索リンクを提示します。</p>
+        <div id="trials"></div>
       </div>
 
       <div class="card">
-        <h3>最新研究を探す（自動クエリ）</h3>
-        <ul id="research-links" class="list"></ul>
-      </div>
-
-      <div class="card">
-        <h3>最新の治験・研究（ClinicalTrials.gov）</h3>
-        <div id="trials">
-          <div class="meta">選択内容に応じて自動取得します。</div>
-          <div id="trials-controls" style="margin:.5rem 0;"></div>
-          <div id="trials-list-host"></div>
-        </div>
+        <h3>コミュニティ投稿（匿名）</h3>
+        <p class="meta">個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。</p>
+        <form id="post-form">
+          <input id="post-nick" placeholder="ニックネーム（任意・匿名可)" />
+          <textarea id="post-text" placeholder="体験談・質問・生活の工夫など（500字以内）" maxlength="500" rows="4"></textarea>
+          <button class="tab-btn" type="submit">投稿する</button>
+        </form>
+        <ul id="post-list" class="list"></ul>
       </div>
     </section>
 
     <!-- 治療情報 -->
     <section id="treatments" class="tab">
       <div class="card">
-        <h2>治療の基本と最新動向</h2>
+        <h2>治療の最新情報（外部リンク集）</h2>
+        <p>信頼できる一次情報へのリンク集です。最新情報は各サイトでご確認ください。</p>
         <ul id="treatment-links" class="list"></ul>
       </div>
     </section>
 
-    <!-- 生活の工夫 -->
+    <!-- 生活の工夫（フラット構造：安定版） -->
     <section id="life" class="tab">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
-        <nav class="subtabs">
-          <button class="life-btn" data-life="surgery">手術</button>
-          <button class="life-btn" data-life="chemo">抗がん剤治療</button>
-          <button class="life-btn" data-life="radiation">放射線治療</button>
-          <button class="life-btn" data-life="other">その他</button>
-        </nav>
-        <div id="life-content"></div>
+        <p>術後ケア、嚥下・発声、口腔ケア、栄養、仕事や学業への復帰などのヒントをまとめています。</p>
+        <ul id="life-tips" class="list"></ul>
       </div>
     </section>
 
@@ -120,20 +156,91 @@
     <section id="about" class="tab">
       <div class="card">
         <h2>このアプリについて</h2>
-        <p>信頼できる公的情報をもとに作られたオープンソースアプリです。</p>
+        <p>このアプリはオープンソースのPWAです。<a href="#" id="export-data">データをJSONで書き出す</a> / <label class="linklike"><input type="file" id="import-data" accept="application/json" hidden/>JSONから読み込む</label></p>
+        <ul>
+          <li>完全無料・広告なし</li>
+          <li>オフライン対応・ホーム画面に追加可</li>
+          <li>匿名利用（投稿機能を有効化する場合はモデレーションが必要）</li>
+        </ul>
+        <h3>注意事項</h3>
+        <ul>
+          <li>個人情報を投稿しないでください。実名・住所・連絡先・カルテ写真などは控えてください。</li>
+          <li>治療方針は必ず主治医に確認してください。緊急時は119番または最寄りの救急外来へ。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 管理 -->
+    <section id="admin" class="tab">
+      <div class="card">
+        <h2>モデレーター管理</h2>
+        <div id="admin-auth">
+          <form id="admin-login">
+            <input id="admin-email" type="email" placeholder="メールアドレス" required />
+            <input id="admin-password" type="password" placeholder="パスワード" required />
+            <button class="tab-btn" type="submit">ログイン</button>
+          </form>
+          <div id="admin-user" style="display:none">
+            <span class="badge" id="admin-email-label"></span>
+            <button class="tab-btn" id="admin-logout">ログアウト</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>通報一覧</h3>
+        <p class="meta">※ モデレーターのみ閲覧できます。投稿の非表示/再表示が可能です。</p>
+        <div id="reports"></div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <small>&copy; 2025 HNC Community</small>
+    <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
-  <script src="app.js?v=38"></script>
+  <!-- モバイル底ナビ -->
+  <nav class="bottom-nav">
+    <button class="tab-btn" data-tab="home">ホーム</button>
+    <button class="tab-btn" data-tab="community">コミュニティ</button>
+    <button class="tab-btn" data-tab="treatments">治療</button>
+    <button class="tab-btn" data-tab="life">生活</button>
+  </nav>
+
+  <!-- Supabase（未設定なら無害） -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="./supabase-client.js"></script>
+
+  <!-- Service Worker（安定版：クエリ無しで登録） -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js?v=38');
+      navigator.serviceWorker.register('./service-worker.js');
     }
+  </script>
+
+  <!-- 初回は #home へ -->
+  <script>
+    (function(){
+      try { if (!location.hash || location.hash === '#admin') location.hash = '#home'; } catch (e) {}
+    })();
+  </script>
+
+  <!-- アプリ本体（v=33 のまま） -->
+  <script src="./app.js?v=33"></script>
+
+  <!-- 花びら -->
+  <script>
+    (function makePetals(){
+      const field = document.getElementById('petals'); if(!field) return;
+      const N = 24;
+      for(let i=0;i<N;i++){
+        const s=document.createElement('span'); s.className='petal';
+        const x=Math.random()*100+'vw'; const wind=(Math.random()*60-20)+'vw';
+        const delay=(Math.random()*-12)+'s'; const dur=(8+Math.random()*8)+'s';
+        s.style.left=x; s.style.setProperty('--x',x); s.style.setProperty('--wind',wind);
+        s.style.animationDelay=delay; s.style.setProperty('--dur',dur);
+        field.appendChild(s);
+      }
+    })();
   </script>
 </body>
 </html>
