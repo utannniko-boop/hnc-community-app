@@ -134,3 +134,94 @@ function initCommunity() {
     if (tab === 'life') filterLife(id);
   });
 }
+// =================== Community Tab (種類別) ===================
+// ドロップダウンに候補を流し込み、選択に応じて内容を表示します。
+
+function selectCancer(id){
+  // Home → 「コミュニティ」へジャンプする時にも使われます
+  const sel = document.getElementById('community-select');
+  if(!sel) return;
+  sel.value = id;
+  // changeイベントを発火して描画
+  sel.dispatchEvent(new Event('change'));
+}
+
+function renderCommunityContent(cancerId){
+  const wrap = document.getElementById('community-content');
+  if(!wrap) return;
+
+  // データ未読込のガード
+  if(!window.DATA || !Array.isArray(DATA.cancers) || DATA.cancers.length===0){
+    wrap.innerHTML = '<p class="meta">データが読み込めていません。resources.json を確認してください。</p>';
+    return;
+  }
+
+  const cancer = DATA.cancers.find(c => c.id === cancerId);
+  if(!cancer){
+    wrap.innerHTML = '<p class="meta">該当のがん種が見つかりませんでした。</p>';
+    return;
+  }
+
+  // 画面生成
+  const aliases = (cancer.aliases||[]).join('・');
+  const topics = (cancer.topics||[]).map(t => `
+    <li><strong>${t.title}</strong><div class="meta">${t.desc||''}</div></li>
+  `).join('') || '<li>トピックは準備中です。</li>';
+
+  const links = (cancer.links||[]).map(l => `
+    <li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>
+  `).join('') || '<li>関連リンクは準備中です。</li>';
+
+  wrap.innerHTML = `
+    <div class="card">
+      <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
+      ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
+    </div>
+
+    <div class="card">
+      <h3>話題・トピック</h3>
+      <ul class="list small">${topics}</ul>
+    </div>
+
+    <div class="card">
+      <h3>関連リンク</h3>
+      <ul class="list small">${links}</ul>
+    </div>
+  `;
+
+  // もし治験や生活の工夫タブに連動させたい場合はここで呼べます
+  // 例: filterTreatments(cancerId); filterLife(cancerId);
+}
+
+function initCommunity(){
+  const sel = document.getElementById('community-select');
+  const wrap = document.getElementById('community-content');
+  if(!sel || !wrap) return; // HTML側のidが違うと動きません
+
+  // 初期化（プレースホルダー＋候補追加）
+  const hasData = window.DATA && Array.isArray(DATA.cancers) && DATA.cancers.length>0;
+  if(!hasData){
+    // データ未読み込み時でも一応メッセージ
+    wrap.innerHTML = '<p class="meta">データ読込中…（更新で反映されます）</p>';
+    return;
+  }
+
+  // 既存の選択肢を一旦クリア
+  sel.innerHTML = '';
+  sel.insertAdjacentHTML('beforeend', `<option value="" disabled selected>がんの種類を選んでください</option>`);
+  DATA.cancers.forEach(c => {
+    sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
+  });
+
+  // 選択時の描画
+  sel.addEventListener('change', (e) => {
+    const id = e.target.value;
+    if(!id) return;
+    renderCommunityContent(id);
+  });
+
+  // もし Home から selectCancer(id) で来た場合、上で change を発火します
+}
+
+// 既存の loadData() の中から呼ばれている想定：
+// try { initCommunity(); } catch(e){}
