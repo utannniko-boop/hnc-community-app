@@ -43,29 +43,40 @@
       </div>
     </section>
 
-    <section id="community" class="tab">
-      <div class="card">
-        <h2>コミュニティ（種類別）</h2>
-        <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
-        <select id="community-select"></select>
-        <div id="community-content"></div>
-      </div>
-      <div class="card">
-        <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
-        <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
-        <div id="trials"></div>
-      </div>
-      <div class="card">
-        <h3>コミュニティ投稿（匿名）</h3>
-        <p class="meta">個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。</p>
-        <form id="post-form">
-          <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
-          <textarea id="post-text" placeholder="体験談・質問・生活の工夫など（500字以内）" maxlength="500" rows="4"></textarea>
-          <button class="tab-btn" type="submit">投稿する</button>
-        </form>
-        <ul id="post-list" class="list"></ul>
-      </div>
-    </section>
+   <section id="community" class="tab">
+  <div class="card">
+    <h2>コミュニティ（種類別）</h2>
+    <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
+    <!-- 🔽 JSでデータを流し込むセレクトボックス -->
+    <select id="community-select"></select>
+    <!-- 🔽 選択後に内容を表示するエリア -->
+    <div id="community-content"></div>
+  </div>
+
+  <div class="card">
+    <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
+    <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
+    <div id="trials"></div>
+  </div>
+
+  <div class="card">
+    <h3>コミュニティ投稿（匿名）</h3>
+    <p class="meta">
+      個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。
+    </p>
+    <form id="post-form">
+      <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
+      <textarea
+        id="post-text"
+        placeholder="体験談・質問・生活の工夫など（500字以内）"
+        maxlength="500"
+        rows="4"
+      ></textarea>
+      <button class="tab-btn" type="submit">投稿する</button>
+    </form>
+    <ul id="post-list" class="list"></ul>
+  </div>
+</section>
 
     <section id="treatments" class="tab">
       <div class="card">
