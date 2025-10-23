@@ -1,1 +1,150 @@
-file:///Users/adachiuta/Documents/index_home_active.html#home
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>頭頸部がんコミュニティ</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="icon" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>頭頸部がんコミュニティ</h1>
+    <nav>
+      <button class="tab-btn" data-tab="home">ホーム</button>
+      <button class="tab-btn" data-tab="community">コミュニティ</button>
+      <button class="tab-btn" data-tab="treatments">治療情報</button>
+      <button class="tab-btn" data-tab="life">生活の工夫</button>
+      <button class="tab-btn" data-tab="about">このアプリ</button>
+      <button class="tab-btn" data-tab="admin">管理</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- 初期表示は home を active に -->
+    <section id="home" class="tab active">
+      <div class="card highlight">
+        <h2>ようこそ</h2>
+        <p>頭頸部がんに関する情報と経験を<strong>安全に・匿名で</strong>シェアするための、無料コミュニティ型Webアプリです（オフライン対応）。</p>
+        <p class="disclaimer">⚠ 医療情報の正確性には配慮していますが、<strong>医師の診断・治療に代わるものではありません</strong>。気になる症状・治療方針は必ず主治医にご相談ください。</p>
+      </div>
+      <div class="card">
+        <h3>がんの種類で探す</h3>
+        <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん…" />
+        <ul id="cancer-list" class="list"></ul>
+      </div>
+      <div class="card">
+        <h3>ブックマーク</h3>
+        <ul id="bookmarks" class="list small"></ul>
+      </div>
+    </section>
+
+    <section id="community" class="tab">
+      <div class="card">
+        <h2>コミュニティ（種類別）</h2>
+        <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
+        <select id="community-select"></select>
+        <div id="community-content"></div>
+      </div>
+      <div class="card">
+        <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
+        <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
+        <div id="trials"></div>
+      </div>
+      <div class="card">
+        <h3>コミュニティ投稿（匿名）</h3>
+        <p class="meta">個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。</p>
+        <form id="post-form">
+          <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
+          <textarea id="post-text" placeholder="体験談・質問・生活の工夫など（500字以内）" maxlength="500" rows="4"></textarea>
+          <button class="tab-btn" type="submit">投稿する</button>
+        </form>
+        <ul id="post-list" class="list"></ul>
+      </div>
+    </section>
+
+    <section id="treatments" class="tab">
+      <div class="card">
+        <h2>治療の最新情報（外部リンク集）</h2>
+        <p>信頼できる一次情報へのリンク集です。最新情報は各サイトでご確認ください。</p>
+        <ul id="treatment-links" class="list"></ul>
+      </div>
+    </section>
+
+    <section id="life" class="tab">
+      <div class="card">
+        <h2>生活の工夫・QOL</h2>
+        <p>術後ケア、嚥下・発声、口腔ケア、栄養、仕事や学業への復帰などのヒントをまとめています。</p>
+        <ul id="life-tips" class="list"></ul>
+      </div>
+    </section>
+
+    <section id="about" class="tab">
+      <div class="card">
+        <h2>このアプリについて</h2>
+        <p>このアプリはオープンソースのPWAです。<a href="#" id="export-data">データをJSONで書き出す</a> / <label class="linklike"><input type="file" id="import-data" accept="application/json" hidden/>JSONから読み込む</label></p>
+        <ul>
+          <li>完全無料・広告なし</li>
+          <li>オフライン対応・ホーム画面に追加可</li>
+          <li>匿名利用（投稿機能を有効化する場合はモデレーションが必要）</li>
+        </ul>
+        <h3>注意事項</h3>
+        <ul>
+          <li>個人情報を投稿しないでください。実名・住所・連絡先・カルテ写真などは控えてください。</li>
+          <li>治療方針は必ず主治医に確認してください。緊急時は119番または最寄りの救急外来へ。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Admin は起動時 active にしない -->
+    <section id="admin" class="tab">
+      <div class="card">
+        <h2>モデレーター管理</h2>
+        <div id="admin-auth">
+          <form id="admin-login">
+            <input id="admin-email" type="email" placeholder="メールアドレス" required />
+            <input id="admin-password" type="password" placeholder="パスワード" required />
+            <button class="tab-btn" type="submit">ログイン</button>
+          </form>
+          <div id="admin-user" style="display:none">
+            <span class="badge" id="admin-email-label"></span>
+            <button class="tab-btn" id="admin-logout">ログアウト</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>通報一覧</h3>
+        <p class="meta">※ モデレーターのみ閲覧できます。投稿の非表示/再表示が可能です。</p>
+        <div id="reports"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>&copy; 2025 HNC Community PWA • MIT License</small>
+  </footer>
+
+  <script src="app.js"></script>
+  <script type="module" src="supabase-client.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+  </script>
+  <!-- 念のため：初回アクセス時は #home に誘導 -->
+  <script id="default-home">
+    (function(){
+      try {
+        if (!location.hash || location.hash === '#admin') {
+          location.hash = '#home';
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>
