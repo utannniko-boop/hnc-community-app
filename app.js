@@ -1,19 +1,23 @@
+/* =========================================================
+   HNC Community PWA - app.js (全置換用・完成版)
+   ========================================================= */
+
 /* =================== グローバル状態 =================== */
 // 失敗時に必ず表示できる最小データ（保険）
 const DATA_FALLBACK = {
   cancers: [
-    { id:"oral", name:"口腔がん（舌・口底など）", aliases:["口腔癌","舌がん","舌癌","歯肉がん","口底がん","oral cancer","C00","C01","C02","C03","C04","C05","C06"], icd:"C00-C06",
+    { id:"oral",        name:"口腔がん（舌・口底など）", aliases:["口腔癌","舌がん","舌癌","歯肉がん","口底がん","oral cancer","C00","C01","C02","C03","C04","C05","C06"], icd:"C00-C06",
       topics:[{title:"術後の発音・嚥下リハ",desc:"STと進めるホームエクササイズ"}],
       links:[{title:"がん情報サービス（頭頸部）",url:"https://ganjoho.jp/public/cancer/head_neck/"}]
     },
-    { id:"oropharynx", name:"中咽頭がん", aliases:["中咽頭癌","HPV関連がん","oropharyngeal cancer","C10"], icd:"C10" },
+    { id:"oropharynx",  name:"中咽頭がん", aliases:["中咽頭癌","HPV関連がん","oropharyngeal cancer","C10"], icd:"C10" },
     { id:"hypopharynx", name:"下咽頭がん", aliases:["下咽頭癌","hypopharyngeal cancer","C13"], icd:"C13" },
     { id:"nasopharynx", name:"上咽頭がん", aliases:["上咽頭癌","NPC","nasopharyngeal carcinoma","C11"], icd:"C11" },
-    { id:"larynx", name:"喉頭がん", aliases:["喉頭癌","laryngeal cancer","C32"], icd:"C32",
+    { id:"larynx",      name:"喉頭がん", aliases:["喉頭癌","laryngeal cancer","C32"], icd:"C32",
       topics:[{title:"発声代替",desc:"電気式人工喉頭・食道発声・シャント"}]
     },
-    { id:"nasal", name:"鼻腔がん", aliases:["鼻腔癌","副鼻腔がん","鼻副鼻腔がん","nasal cancer","paranasal sinus cancer","C30","C31"], icd:"C30-C31" },
-    { id:"salivary", name:"唾液腺がん", aliases:["唾液腺癌","耳下腺がん","耳下腺癌","顎下腺がん","舌下腺がん","salivary gland cancer","parotid","C07","C08"], icd:"C07-C08" }
+    { id:"nasal",       name:"鼻腔がん", aliases:["鼻腔癌","副鼻腔がん","鼻副鼻腔がん","nasal cancer","paranasal sinus cancer","C30","C31"], icd:"C30-C31" },
+    { id:"salivary",    name:"唾液腺がん", aliases:["唾液腺癌","耳下腺がん","耳下腺癌","顎下腺がん","舌下腺がん","salivary gland cancer","parotid","C07","C08"], icd:"C07-C08" }
   ],
   treatments: [
     {title:"がん情報サービス（頭頸部）", url:"https://ganjoho.jp/public/cancer/head_neck/", source:"国立がん研究センター",
@@ -36,6 +40,7 @@ if (document.readyState === 'loading') {
 async function boot(){
   await loadData();         // データ取得（失敗時は FALLBACK）
   initAll();                // 各UI初期化
+
   // ハッシュで #community に来たら確実に初期化
   window.addEventListener('hashchange', () => {
     if (location.hash === '#community') ensureCommunityReady();
@@ -97,14 +102,15 @@ function initHome(){
   const input = document.getElementById('cancer-search');
   if(!list || !input) return;
 
+  // 表記ゆれ吸収
   const norm = (s) => (s || '')
     .toString()
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[ \u3000]/g, '')
-    .replace(/癌腫/g, 'がんしゅ')
-    .replace(/癌/g, 'がん')
-    .replace(/ガン/g, 'がん');
+    .replace(/癌腫/g, 'がんしゅ') // 先に長い語
+    .replace(/癌/g, 'がん')       // 癌 → がん
+    .replace(/ガン/g, 'がん');    // カタカナ → ひらがな
 
   function render(filterText=''){
     const f = norm(filterText);
@@ -117,7 +123,7 @@ function initHome(){
     }
 
     const items = arr.filter(c => {
-      if (!f) return true;
+      if (!f) return true; // 未入力なら全件
       const fields = [c.name, ...(c.aliases||[]), c.icd||''].map(norm).join('||');
       return fields.includes(f);
     });
@@ -173,13 +179,18 @@ function initCommunity(){
     sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
   });
 
-  sel.addEventListener('change', (e) => {
-    const id = e.target.value;
-    if(!id) return;
-    renderCommunityContent(id);
-  });
+  // change は重複で増えないように1回だけ
+  if (!sel.__hnc_bound__) {
+    sel.addEventListener('change', (e) => {
+      const id = e.target.value;
+      if(!id) return;
+      renderCommunityContent(id);
+    });
+    sel.__hnc_bound__ = true;
+  }
 }
 
+// コミュニティを開いたタイミングで空なら初期化
 function ensureCommunityReady(){
   const sel = document.getElementById('community-select');
   if(!sel) return;
@@ -218,13 +229,21 @@ function renderCommunityContent(cancerId){
       <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
       ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
     </div>
-    <div class="card"><h3>話題・トピック</h3><ul class="list small">${topics}</ul></div>
-    <div class="card"><h3>関連リンク</h3><ul class="list small">${links}</ul></div>
+    <div class="card">
+      <h3>話題・トピック</h3>
+      <ul class="list small">${topics}</ul>
+    </div>
+    <div class="card">
+      <h3>関連リンク</h3>
+      <ul class="list small">${links}</ul>
+    </div>
   `;
 
-  // 連動（任意）
+  // 連動描画（任意）
   try { filterTreatments(cancerId); } catch(e){}
   try { filterLife(cancerId); } catch(e){}
+  try { loadTrials(cancerId); } catch(e){}
+  try { loadPosts(cancerId); } catch(e){}
 }
 
 /* =================== 治療リンク =================== */
@@ -273,9 +292,8 @@ function renderBookmarks(){
   if(!ul) return;
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
-/* ======== ClinicalTrials.gov 連携：治験の自動取得 ======== */
 
-// がん種ID → 検索クエリのマッピング（必要に応じて調整可）
+/* =================== ClinicalTrials.gov 連携 =================== */
 const TRIAL_QUERY = {
   oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
   oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
@@ -286,8 +304,6 @@ const TRIAL_QUERY = {
   salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
   _default: '"Head+and+Neck+Cancer"'
 };
-
-// ClinicalTrials.gov（v1 StudyFields API）から上位10件取得
 async function fetchTrialsByCancerId(cancerId){
   const expr = TRIAL_QUERY[cancerId] || TRIAL_QUERY._default;
   const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
@@ -304,7 +320,6 @@ async function fetchTrialsByCancerId(cancerId){
     updated: r.LastUpdatePostDate?.[0]
   }));
 }
-
 async function loadTrials(cancerId){
   const box = document.getElementById('trials');
   if (!box) return;
@@ -330,21 +345,16 @@ async function loadTrials(cancerId){
     box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
   }
 }
-
-// HTMLエスケープの小ユーティリティ
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ======== Supabase 投稿（匿名） ======== */
-// supabase-client.js に createClient 済み想定。未設定なら安全にスキップ。
-
+/* =================== Supabase 投稿（未設定ならスキップ） =================== */
 async function loadPosts(cancerId){
   const ul = document.getElementById('post-list');
   if (!ul) return;
-  // Supabase未設定なら案内
   if (!window.supabase){
-    ul.innerHTML = '<li class="meta">投稿機能は未設定です（supabase-client.js にURLとAnonキーを設定すると有効化されます）。</li>';
+    ul.innerHTML = '<li class="meta">投稿機能は未設定です（supabase-client.js にURLとAnonキーを設定すると有効化）。</li>';
     return;
   }
   try{
@@ -371,22 +381,18 @@ async function loadPosts(cancerId){
       </li>
     `).join('');
 
-    // 通報ボタン
+    // 通報ボタン（RPCがあれば increment_reports を使うのが理想）
     ul.querySelectorAll('button[data-action="report"]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const li = e.target.closest('li[data-id]');
         const id = li?.dataset.id;
         if (!id) return;
         try{
-          // reports を +1（しきい値はDB側のトリガーで非表示化がおすすめ）
-          const { data: d2, error: e2 } = await supabase
-            .from('posts')
-            .update({ reports: supabase.rpc ? undefined : undefined }) // noop for rpc-less
-            .eq('id', id)
-            .select();
-          // 代替: RPCがあれば使う（後述のSQL参照）
-          if (supabase.rpc){
+          if (supabase.rpc) {
             await supabase.rpc('increment_reports', { post_id: id });
+          } else {
+            // 代替: とりあえず reports を +1（RLS設定に要注意）
+            await supabase.from('posts').update({ reports: (li.dataset.reports|0)+1 }).eq('id', id);
           }
           alert('通報しました。ありがとうございます。');
         }catch(err){
@@ -401,13 +407,11 @@ async function loadPosts(cancerId){
     ul.innerHTML = '<li class="meta">投稿の取得に失敗しました。</li>';
   }
 }
-
 function initPosting(cancerIdProvider){
   const form = document.getElementById('post-form');
   const ul   = document.getElementById('post-list');
   if(!form || !ul) return;
 
-  // Supabase未設定ならフォームごと案内
   if (!window.supabase){
     form.addEventListener('submit', (e)=>{ e.preventDefault(); alert('投稿機能は未設定です。supabase-client.js を設定してください。'); });
     return;
@@ -419,7 +423,6 @@ function initPosting(cancerIdProvider){
     const body = (document.getElementById('post-text')?.value || '').trim();
     if (!body) { alert('本文を入力してください'); return; }
 
-    // 現在選択中のがん種ID（コミュニティタブと連動）
     const cancerId = typeof cancerIdProvider === 'function' ? cancerIdProvider() : null;
 
     try{
@@ -437,31 +440,16 @@ function initPosting(cancerIdProvider){
     }
   });
 }
-
-/* ======== 既存の描画にフック ======== */
-// コミュニティ表示時に治験＆投稿を更新
-const __orig_renderCommunityContent = (typeof renderCommunityContent === 'function') ? renderCommunityContent : null;
-renderCommunityContent = function(cancerId){
-  if (__orig_renderCommunityContent) __orig_renderCommunityContent(cancerId);
-  // 治験を読みに行く
-  try { loadTrials(cancerId); } catch(e){}
-  // 投稿一覧を絞り込み
-  try { loadPosts(cancerId); } catch(e){}
-};
-
 // 初期化の最後で一度だけ投稿機能を有効化（選択中のがんIDを渡す）
-(function hookPostingInit(){
-  document.addEventListener('DOMContentLoaded', () => {
-    initPosting(() => {
-      const sel = document.getElementById('community-select');
-      return sel ? sel.value || null : null;
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  initPosting(() => {
+    const sel = document.getElementById('community-select');
+    return sel ? sel.value || null : null;
   });
-})();
+});
 
-/* ======== 強制ポピュレーター（コミュニティの候補が空でも必ず出す） ======== */
+/* =================== 強制ポピュレーター（保険） =================== */
 (function forcePopulateCommunity(){
-  // 最低限の候補（resources.json が読めない時の保険）
   const FALLBACK = [
     { id:"oral",        name:"口腔がん（舌・口底など）" },
     { id:"oropharynx",  name:"中咽頭がん" },
@@ -493,8 +481,8 @@ renderCommunityContent = function(cancerId){
       sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`);
     });
 
-    // change が未設定なら簡易の描画フックを付ける（既存の renderCommunityContent があればそちら優先）
-    if (!sel.__hnc_bound__) {
+    // change が未設定なら簡易の描画フックを付ける（既存の renderCommunityContent があれば優先）
+    if (!sel.__hnc_bound_force__) {
       sel.addEventListener('change', (e) => {
         const id = e.target.value;
         if (!id) return;
@@ -512,16 +500,14 @@ renderCommunityContent = function(cancerId){
             : `<p class="meta">該当が見つかりませんでした。</p>`;
         }
       });
-      sel.__hnc_bound__ = true;
+      sel.__hnc_bound_force__ = true;
     }
     return true;
   }
 
-  // 初回：DOM読み込み後に試行
+  // DOM読み込み後に複数回リトライ（他初期化より遅れても埋める）
   document.addEventListener('DOMContentLoaded', () => {
-    // 何度かリトライ（他初期化より遅れても埋める）
-    const tries = [0, 200, 600, 1200];
-    tries.forEach(ms => setTimeout(populateOnce, ms));
+    [0, 200, 600, 1200].forEach(ms => setTimeout(populateOnce, ms));
   });
 
   // タブをコミュニティに切り替えたタイミングでも試行
@@ -535,3 +521,8 @@ renderCommunityContent = function(cancerId){
     if (location.hash === '#community') setTimeout(populateOnce, 0);
   });
 })();
+
+/* =================== 最後に：開発用の小テスト（任意） =================== */
+// window.addEventListener('DOMContentLoaded', () => {
+//   console.log('DATA.cancers length:', Array.isArray(DATA.cancers) ? DATA.cancers.length : 0);
+// });
