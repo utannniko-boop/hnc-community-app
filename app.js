@@ -5,6 +5,7 @@
    - ClinicalTrials.gov 失敗時は JP/EN 横断検索リンクを自動提示
    - TRIAL_QUERY の重複定義をガード
    - resources.json が無くても FALLBACK で動く（cache-bust付）
+   - 503/一時障害向けにリトライ＋タイムアウト追加
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -489,13 +490,41 @@ function buildTrialsExpr({ cancerId=null, histologyId=null } = {}){
   return (CQ._default || '"Head+and+Neck+Cancer"');            // ③ デフォルト
 }
 
-// ClinicalTrials.gov v1 StudyFields API（上位10件）
+/* ---------- ClinicalTrials.gov 呼び出し：リトライ付き ---------- */
+async function fetchJSONWithRetry(url, { retries = 3, baseDelay = 600, timeoutMs = 9000 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!res.ok) {
+        // 429/5xx はリトライ
+        if ([429, 500, 502, 503, 504].includes(res.status) && attempt < retries) {
+          const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 250;
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json();
+    } catch (e) {
+      clearTimeout(timer);
+      if (attempt < retries) {
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 250;
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+/* ---------- ClinicalTrials.gov v1 StudyFields API（上位10件） ---------- */
 async function fetchTrials(params = {}){
   const expr = buildTrialsExpr(params);
   const url  = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
-  const res  = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
-  const json = await res.json();
+  const json = await fetchJSONWithRetry(url, { retries: 3, baseDelay: 700, timeoutMs: 9000 });
   const rows = json?.StudyFieldsResponse?.StudyFields || [];
   return rows.map(r => ({
     id: r.NCTId?.[0],
@@ -519,7 +548,6 @@ function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
   if (histo) {
     enKey = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || enKey;
   } else if (cancer) {
-    // 部位の英語ラベル粗推定
     const SITE_EN_LABELS = {
       oral: 'oral cavity cancer',
       oropharynx: 'oropharyngeal cancer',
