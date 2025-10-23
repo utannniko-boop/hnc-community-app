@@ -33,13 +33,18 @@ if (document.readyState === 'loading') {
 function initHome(){
   const list = document.getElementById('cancer-list');
   const input = document.getElementById('cancer-search');
-
-  // 全角・半角／小文字化／スペース除去の正規化
-  const norm = (s) => (s || '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFKC')       // 例：がん/ｶﾞﾝ/ガン の表記ゆれ吸収
-    .replace(/\s+/g, '');    // 余分な空白を除去
+  
+// 全角/半角・空白・表記ゆれを吸収する正規化
+const norm = (s) => (s || '')
+  .toString()
+  .toLowerCase()
+  .normalize('NFKC')       // 全角→半角、濁点結合などを正規化
+  .replace(/[ \u3000]/g, '') // 半角/全角スペース除去
+  // ---- 表記ゆれ吸収（重要）----
+  .replace(/癌腫/g, 'がんしゅ')   // 先に長い語を
+  .replace(/癌/g, 'がん')         // 癌 → がん
+  .replace(/ガン/g, 'がん');      // カタカナ → ひらがな
+  
 
   function render(filterText=''){
     const f = norm(filterText);
