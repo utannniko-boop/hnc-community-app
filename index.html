@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icon.png" />
 
   <link rel="stylesheet" href="style.css?v=35" />
-  <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
+  <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫、治験・論文検索まで網羅した無料PWAアプリ" />
 </head>
 <body>
   <header class="topbar">
@@ -45,14 +45,28 @@
     <section id="community" class="tab">
       <div class="card">
         <h2>コミュニティ</h2>
-        <p>がんの種類を選ぶと、関連話題・治験情報・支援先を表示します。</p>
+        <p>がんの種類を選ぶと、関連トピック・ガイドライン・論文検索・治験情報を表示します。</p>
         <select id="community-select"></select>
         <div id="community-content"></div>
       </div>
 
       <div class="card">
-        <h3>最新の治験・研究</h3>
-        <div id="trials"></div>
+        <h3>根拠とガイドライン</h3>
+        <ul id="evidence-links" class="list"></ul>
+      </div>
+
+      <div class="card">
+        <h3>最新研究を探す（自動クエリ）</h3>
+        <ul id="research-links" class="list"></ul>
+      </div>
+
+      <div class="card">
+        <h3>最新の治験・研究（ClinicalTrials.gov）</h3>
+        <div id="trials">
+          <div class="meta">がん種を選ぶと自動取得します。</div>
+          <div id="trials-controls" style="margin:.5rem 0;"></div>
+          <div id="trials-list-host"></div>
+        </div>
       </div>
     </section>
 
@@ -91,7 +105,7 @@
     <small>&copy; 2025 HNC Community</small>
   </footer>
 
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=36"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js?v=35');
