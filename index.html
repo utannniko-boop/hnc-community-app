@@ -4,14 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>頭頸部がんコミュニティ</title>
+
+  <!-- PWA 基本 -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2563eb" />
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- キャッシュ破壊用のバージョンを付与（必要に応じて数値を上げる） -->
+  <link rel="stylesheet" href="style.css?v=26" />
+
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
 </head>
 <body>
+  <noscript>このアプリを利用するには JavaScript を有効にしてください。</noscript>
+
   <header class="topbar">
     <h1>頭頸部がんコミュニティ</h1>
     <nav>
@@ -62,7 +69,7 @@
         <h3>コミュニティ投稿（匿名）</h3>
         <p class="meta">個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。</p>
         <form id="post-form">
-          <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
+          <input id="post-nick" placeholder="ニックネーム（任意・匿名可)" />
           <textarea id="post-text" placeholder="体験談・質問・生活の工夫など（500字以内）" maxlength="500" rows="4"></textarea>
           <button class="tab-btn" type="submit">投稿する</button>
         </form>
@@ -134,9 +141,10 @@
     <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
-  <!-- Supabase（未設定なら無害） -->
-  <script type="module" src="supabase-client.js"></script>
+  <!-- Supabase ライブラリ（未設定なら無害） -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- あなたのsupabase接続設定（必要なら中でURL/Anonキーを設定） -->
+  <script type="module" src="supabase-client.js"></script>
 
   <!-- Service Worker 登録（相対パス） -->
   <script>
@@ -146,7 +154,7 @@
   </script>
 
   <!-- 念のため：初回アクセス時は #home に誘導 -->
-  <script id="default-home">
+  <script>
     (function(){
       try {
         if (!location.hash || location.hash === '#admin') {
@@ -156,7 +164,7 @@
     })();
   </script>
 
-  <!-- アプリ本体（※1回だけ読み込む！） -->
-  <script src="./app.js"></script>
+  <!-- アプリ本体（※1回だけ読み込む！ バージョン文字でキャッシュ破壊） -->
+  <script src="./app.js?v=26"></script>
 </body>
 </html>
