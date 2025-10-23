@@ -58,3 +58,11 @@ function initHome(){
     if (tab === 'life') filterLife(id);
   });
 }
+// ---- Tab switching ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const tab = e.target.dataset.tab;
+    document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+    document.getElementById(tab).classList.add('active');
+  });
+});
