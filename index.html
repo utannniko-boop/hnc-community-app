@@ -11,10 +11,10 @@
   <link rel="icon" href="./icon.png" />
   <link rel="apple-touch-icon" href="./icon.png" />
 
-  <!-- 外部CSS（まずはこれを使う） -->
-  <link id="main-css" rel="stylesheet" href="./style.css?v=33" />
+  <!-- 外部CSS -->
+  <link id="main-css" rel="stylesheet" href="./style.css?v=34" />
 
-  <!-- フォールバック用：外部CSSが死んでも最低限の見た目は出す -->
+  <!-- フォールバック（最低限の見た目） -->
   <style id="critical-inline">
     :root{--pink:#f7dbe4;--ink:#223;--muted:#667;--bg:#fff;}
     *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;color:var(--ink);background:#fafafa}
@@ -38,12 +38,14 @@
     .bottom-nav .tab-btn{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:8px 12px}
     .footer{color:#667;text-align:center;margin:40px 0 20px}
     .petal-field{height:0}
-    /* 非読込検知バナー */
+    /* CSS 非読込検知 */
     #css-repair{display:none;position:fixed;left:10px;right:10px;bottom:10px;background:#fff8fb;border:1px solid #f3b7c5;border-radius:12px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);z-index:9999}
     #css-repair button{background:#a03962;color:#fff;border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
-    /* タブ表示切替 */
-    .tab{display:none}
-    .tab.active{display:block}
+    /* 生活の工夫フィルタ最低限 */
+    #life-filters{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+    #life-filters .seg{display:flex;gap:8px;flex-wrap:wrap}
+    #life-filters input[type="search"]{max-width:320px}
+    #life-filters button[aria-pressed="true"]{background:#a03962;color:#fff;border-color:#a03962}
   </style>
 
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
@@ -63,6 +65,7 @@
     </nav>
   </header>
 
+  <!-- ヒーロー -->
   <section class="hero">
     <div class="hero-inner">
       <h2>春の桜テーマでやさしく。</h2>
@@ -72,6 +75,7 @@
   </section>
 
   <main class="container">
+    <!-- ホーム -->
     <section id="home" class="tab active">
       <div class="grid-2">
         <div class="card highlight">
@@ -107,6 +111,7 @@
       </div>
     </section>
 
+    <!-- コミュニティ -->
     <section id="community" class="tab">
       <div class="card">
         <h2>コミュニティ（種類別）</h2>
@@ -133,6 +138,7 @@
       </div>
     </section>
 
+    <!-- 治療情報 -->
     <section id="treatments" class="tab">
       <div class="card">
         <h2>治療の最新情報（外部リンク集）</h2>
@@ -141,25 +147,26 @@
       </div>
     </section>
 
-    <!-- 生活の工夫：治療別フィルタ＋検索版 -->
-    <section id="life" class="tab" aria-hidden="true">
+    <!-- 生活の工夫（カテゴリ＋検索＋描画領域を常設） -->
+    <section id="life" class="tab">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
-        <p>治療の種類別に、よくある困りごとと対処のヒントをまとめました。検索もできます。</p>
-
-        <div id="life-filters" class="meta" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px;">
-          <button type="button" class="tab-btn" data-life-cat="all" aria-pressed="true">すべて</button>
-          <button type="button" class="tab-btn" data-life-cat="surgery">手術</button>
-          <button type="button" class="tab-btn" data-life-cat="chemo">抗がん剤治療</button>
-          <button type="button" class="tab-btn" data-life-cat="radiation">放射線治療</button>
-          <button type="button" class="tab-btn" data-life-cat="other">その他の治療</button>
-          <input id="life-search" placeholder="例：口内炎 / リンパ浮腫 / 開口訓練…" style="flex:1;min-width:220px" />
+        <p>治療中に起こりがちな困りごとと工夫を、治療別に素早く探せます。</p>
+        <div id="life-filters">
+          <div class="seg" role="tablist" aria-label="治療カテゴリ">
+            <button class="tab-btn" data-life-cat="all" aria-pressed="true">すべて</button>
+            <button class="tab-btn" data-life-cat="surgery">手術</button>
+            <button class="tab-btn" data-life-cat="radiation">放射線治療</button>
+            <button class="tab-btn" data-life-cat="chemo">抗がん剤治療</button>
+            <button class="tab-btn" data-life-cat="other">その他の治療</button>
+          </div>
+          <input id="life-search" type="search" placeholder="例：口腔乾燥 / 悪心 / リンパ浮腫 / 開口障害 など" />
         </div>
-
-        <div id="life-host"></div>
       </div>
+      <div id="life-host"></div>
     </section>
 
+    <!-- このアプリ -->
     <section id="about" class="tab">
       <div class="card">
         <h2>このアプリについて</h2>
@@ -177,6 +184,7 @@
       </div>
     </section>
 
+    <!-- 管理 -->
     <section id="admin" class="tab">
       <div class="card">
         <h2>モデレーター管理</h2>
@@ -204,6 +212,7 @@
     <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
+  <!-- モバイル底ナビ -->
   <nav class="bottom-nav">
     <button class="tab-btn" data-tab="home">ホーム</button>
     <button class="tab-btn" data-tab="community">コミュニティ</button>
@@ -215,24 +224,22 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./supabase-client.js"></script>
 
-  <!-- Service Worker（v=33 で確実更新） -->
+  <!-- Service Worker（v=34でキャッシュ更新） -->
   <script>
     if ('serviceWorker' in navigator && !location.search.includes('no-sw=1')) {
-      navigator.serviceWorker.register('./service-worker.js?v=33');
+      navigator.serviceWorker.register('./service-worker.js?v=34');
     }
   </script>
 
-  <!-- 初回は #home へ -->
+  <!-- 初期ハッシュ -->
   <script>
-    (function(){
-      try { if (!location.hash || location.hash === '#admin') location.hash = '#home'; } catch (e) {}
-    })();
+    (function(){ try{ if(!location.hash || location.hash==='#admin') location.hash='#home'; }catch(e){} })();
   </script>
 
   <!-- アプリ本体 -->
-  <script src="./app.js?v=33"></script>
+  <script src="./app.js?v=34"></script>
 
-  <!-- CSS 読み込み監視：失敗時は修復UI表示＋代替ロード -->
+  <!-- CSSリペアUI -->
   <div id="css-repair">
     <strong>デザインが反映されていませんか？</strong>
     <p class="meta">ボタンを押すと、古い Service Worker とキャッシュを削除して再読み込みします。</p>
@@ -240,60 +247,36 @@
   </div>
   <script>
     (function(){
-      const probe = document.createElement('div');
-      probe.className = 'topbar';
-      probe.style.position = 'absolute';
-      probe.style.visibility = 'hidden';
+      const probe=document.createElement('div');probe.className='topbar';probe.style.position='absolute';probe.style.visibility='hidden';
       document.body.appendChild(probe);
-      setTimeout(async () => {
-        const bg = getComputedStyle(probe).backgroundImage + getComputedStyle(probe).backgroundColor;
-        const styled = bg && bg !== 'none' && !bg.includes('rgba(0, 0, 0, 0)');
+      setTimeout(async ()=>{
+        const cs=getComputedStyle(probe), styled=(cs.backgroundImage+cs.backgroundColor)||'';
         document.body.removeChild(probe);
-
-        if (!styled) {
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = './style.css';
-          document.head.appendChild(link);
-          document.getElementById('css-repair').style.display = 'block';
+        if(!styled || styled.includes('rgba(0, 0, 0, 0)')){
+          const link=document.createElement('link');link.rel='stylesheet';link.href='./style.css';document.head.appendChild(link);
+          document.getElementById('css-repair').style.display='block';
         }
-      }, 500);
+      },500);
 
-      document.getElementById('btn-repair').addEventListener('click', async () => {
-        try {
-          if ('serviceWorker' in navigator) {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(regs.map(r => r.unregister()));
-          }
-          if ('caches' in window) {
-            const keys = await caches.keys();
-            await Promise.all(keys.map(k => caches.delete(k)));
-          }
-        } catch (e) {}
-        const u = new URL(location.href);
-        u.searchParams.set('no-sw', '1');
-        location.href = u.toString();
+      document.getElementById('btn-repair').addEventListener('click', async ()=>{
+        try{
+          if('serviceWorker'in navigator){ const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister())); }
+          if('caches'in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+        }catch(e){}
+        const u=new URL(location.href);u.searchParams.set('no-sw','1');location.href=u.toString();
       });
     })();
   </script>
 
   <!-- 花びら -->
   <script>
-    (function makePetals(){
-      const field = document.getElementById('petals'); if(!field) return;
-      const N = 24;
-      for(let i=0; i<N; i++){
-        const s = document.createElement('span');
-        s.className = 'petal';
-        const x = Math.random()*100 + 'vw';
-        const wind = (Math.random() * 60 - 20) + 'vw';
-        const delay = (Math.random()*-12) + 's';
-        const dur = (8 + Math.random()*8) + 's';
-        s.style.left = x;
-        s.style.setProperty('--x', x);
-        s.style.setProperty('--wind', wind);
-        s.style.animationDelay = delay;
-        s.style.setProperty('--dur', dur);
+    (function(){
+      const field=document.getElementById('petals'); if(!field) return;
+      const N=24;
+      for(let i=0;i<N;i++){
+        const s=document.createElement('span'); s.className='petal';
+        const x=Math.random()*100+'vw', wind=(Math.random()*60-20)+'vw', delay=(Math.random()*-12)+'s', dur=(8+Math.random()*8)+'s';
+        s.style.left=x; s.style.setProperty('--x',x); s.style.setProperty('--wind',wind); s.style.animationDelay=delay; s.style.setProperty('--dur',dur);
         field.appendChild(s);
       }
     })();
