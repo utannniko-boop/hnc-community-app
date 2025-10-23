@@ -220,3 +220,68 @@
   </script>
 </body>
 </html>
+
+/* ===== Print: A4 / Monochrome friendly ===== */
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+
+  /* 余白や背景をシンプルに */
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* 画面用UIを非表示 */
+  .topbar, nav, .footer,
+  .tab-btn, button, .badge,
+  #admin, #about {
+    display: none !important;
+  }
+
+  /* 必要セクションは表示（lifeを主に印刷） */
+  .tab { display: none !important; }
+  #life.tab { display: block !important; }
+
+  /* カードの影・枠を削除して紙向けに */
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 0 10mm 0 !important;
+    page-break-inside: avoid;
+  }
+
+  /* 見出しをくっきり */
+  h2, h3 {
+    color: #000 !important;
+    margin: 0 0 4mm 0 !important;
+    border: none !important;
+  }
+
+  /* リストの読みやすさ */
+  ul.list {
+    margin: 0 0 4mm 1.5mm !important;
+    padding-left: 5mm !important;
+  }
+  ul.list li {
+    page-break-inside: avoid;
+    margin: 0 0 2.5mm 0;
+  }
+
+  /* リンクのURLを併記（紙でも根拠を追える） */
+  a[href]:after {
+    content: " (" attr(href) ") ";
+    font-size: 9pt;
+  }
+
+  /* 画像は印刷を軽くするため省略（必要なら削除） */
+  img { display: none !important; }
+}
