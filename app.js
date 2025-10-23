@@ -267,13 +267,38 @@ function selectCancer(id){
   sel.value=id; sel.dispatchEvent(new Event('change'));
 }
 function renderCommunityContent(cancerId){
-  const wrap=document.getElementById('community-content'); if(!wrap) return;
-  const c=(DATA.cancers||[]).find(x=>x.id===cancerId);
-  if(!c){ wrap.innerHTML='<p class="meta">該当のがん種が見つかりませんでした。</p>'; return; }
-  const aliases=(c.aliases||[]).join('・');
-  const topics=(c.topics||[]).map(t=>`<li><strong>${t.title}</strong><div class="meta">${t.desc||''}</div></li>`).join('') || '<li>トピック準備中</li>';
-  const links=(c.links||[]).map(l=>`<li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>`).join('') || '<li>関連リンク準備中</li>';
-   wrap.innerHTML = `
+ async function renderCommunityContent(cancerId){
+  const wrap = document.getElementById('community-content');
+  if(!wrap) return;
+
+  const arr = Array.isArray(DATA?.cancers) ? DATA.cancers : [];
+  const cancer = arr.find(c => c.id === cancerId);
+  if(!cancer){
+    wrap.innerHTML = '<p class="meta">該当のがん種が見つかりませんでした。</p>';
+    return;
+  }
+
+  const topicsHTML = (cancer.topics||[]).map((t, i) => `
+    <li class="topic-item" data-index="${i}">
+      <button class="topic-toggle" type="button">
+        <strong>${t.title}</strong>
+        ${t.url ? '<span class="meta">（クリックで外部サイト）</span>' : ''}
+      </button>
+      <div class="topic-body" style="display:none;margin-top:6px;">
+        ${t.desc ? `<div class="meta">${t.desc}</div>` : ''}
+        ${t.url ? `<div style="margin-top:6px;"><a class="linklike" href="${t.url}" target="_blank" rel="noopener">リンクを開く</a></div>` : ''}
+      </div>
+    </li>
+  `).join('') || '<li>トピックは準備中です。</li>';
+
+  const linksHTML = (cancer.links||[]).map(l => `
+    <li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>
+  `).join('') || '<li>関連リンクは準備中です。</li>';
+
+  const aliases = (cancer.aliases||[]).join('・');
+  const histoCtx = window.HISTO_CONTEXT || null;
+
+  wrap.innerHTML = `
     <div class="card">
       <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
       ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
@@ -286,8 +311,33 @@ function renderCommunityContent(cancerId){
       <h3>関連リンク</h3>
       <ul class="list small">${linksHTML}</ul>
     </div>
-    ${renderKnowledgeCardsHTML({ cancerId, histologyId: window.HISTO_CONTEXT || null })}
+    ${renderKnowledgeCardsHTML({ cancerId, histologyId: histoCtx })}
   `;
+
+  const topicsList = document.getElementById('community-topics');
+  if (topicsList) {
+    topicsList.addEventListener('click', (e) => {
+      const btn = e.target.closest('.topic-toggle');
+      if (!btn) return;
+      const li = btn.closest('.topic-item');
+      const idx = Number(li?.dataset.index ?? -1);
+      const topic = (cancer.topics || [])[idx];
+      if (topic?.url) { window.open(topic.url, '_blank', 'noopener'); return; }
+      const body = li.querySelector('.topic-body');
+      if (!body) return;
+      const visible = body.style.display !== 'none';
+      body.style.display = visible ? 'none' : 'block';
+    });
+  }
+
+  try { filterTreatments(cancerId); } catch(e){}
+  try { filterLife(cancerId); } catch(e){}
+
+  try {
+    await loadTrials(cancerId, { histologyId: histoCtx });
+    window.HISTO_CONTEXT = null;
+  } catch(e) {}
+  try { loadPosts(cancerId); } catch(e){} // 有効化していなければ無視
 }
 
 /* ========== 治療リンク ========== */
