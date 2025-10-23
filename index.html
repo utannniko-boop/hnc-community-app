@@ -296,6 +296,47 @@
         field.appendChild(s);
       }
     })();
-  </script>
+  <script>
+/* Tab router hotfix v1 — no globals, no conflicts */
+(() => {
+  const applyTab = (tab) => {
+    // セクション表示切替
+    document.querySelectorAll('.tab').forEach(el =>
+      el.classList.toggle('active', el.id === tab)
+    );
+    // ボタンの active 状態
+    document.querySelectorAll('[data-tab]').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tab)
+    );
+    // 追加動作が必要ならここに（例：コミュニティ選択初期化など）
+    // if (tab === 'community') { /* ここに必要なら呼び出し */ }
+  };
+
+  const go = (tab) => {
+    if (!tab) tab = 'home';
+    applyTab(tab);
+    const h = '#' + tab;
+    if (location.hash !== h) {
+      history.replaceState(null, '', h);
+    }
+  };
+
+  // クリックで切替（イベント委譲）
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-tab]');
+    if (!btn) return;
+    e.preventDefault();
+    go(btn.dataset.tab);
+  });
+
+  // ハッシュ直打ち/履歴で切替
+  window.addEventListener('hashchange', () => {
+    go(location.hash.slice(1));
+  });
+
+  // 初期表示
+  go(location.hash.replace('#', '') || 'home');
+})();
+</script>
 </body>
 </html>
