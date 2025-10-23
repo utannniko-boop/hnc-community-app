@@ -10,10 +10,9 @@
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
 
-  <link rel="stylesheet" href="style.css?v=35" />
+  <link rel="stylesheet" href="style.css?v=38" />
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫、治験・論文検索まで網羅した無料PWAアプリ" />
   <style>
-    /* 最低限の見た目（style.cssが読めない時の保険） */
     :root{--ink:#223;--muted:#667}
     body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:var(--ink)}
     .topbar{position:sticky;top:0;background:linear-gradient(90deg,#f6c8d8,#f0e6ef);padding:10px 12px;border-bottom:1px solid #e7c;z-index:10}
@@ -58,6 +57,7 @@
       <div class="card">
         <h3>🔍 統合検索（部位 / 組織型 / 治験・論文）</h3>
         <input id="global-search" placeholder="例：喉頭がん / 腺様嚢胞癌 / MEC / C32 / oropharyngeal ..." />
+        <!-- ★ デモ文は削除。入力時に app.js がここへ結果を描画 -->
         <ul id="global-results" class="list"></ul>
       </div>
     </section>
@@ -129,10 +129,10 @@
     <small>&copy; 2025 HNC Community</small>
   </footer>
 
-  <script src="app.js?v=37"></script>
+  <script src="app.js?v=38"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js?v=35');
+      navigator.serviceWorker.register('./service-worker.js?v=38');
     }
   </script>
 </body>
