@@ -1,0 +1,135 @@
+/* ===============================
+   Head & Neck Cancer Community — Theming CSS
+   1) Copy-paste these :root variables into your existing style.css (top)
+   2) Or replace your style.css entirely with this file
+   3) You can switch theme by adding body class: .theme-trust / .theme-calm / .theme-warm
+   =============================== */
+
+:root{
+  /* Base colors */
+  --bg:#f7f8fb;
+  --fg:#111827;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  /* Brand (default = trust/blue) */
+  --brand:#2563eb;
+  --brand-weak:#eff6ff;
+  --brand-strong:#1d4ed8;
+
+  /* Radii & elevation */
+  --radius:16px;
+  --shadow:0 8px 24px rgba(0,0,0,.06);
+
+  /* Typography */
+  --font-ui: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', Arial, sans-serif;
+  --font-size-base:16px;
+  --font-size-h1:20px;
+  --font-size-h2:18px;
+  --font-size-small:12px;
+}
+
+/* Optional theme variants */
+body.theme-calm{
+  --brand:#0ea5a4;       /* teal */
+  --brand-weak:#ecfeff;
+  --brand-strong:#0f766e;
+}
+body.theme-warm{
+  --brand:#e11d48;       /* rose */
+  --brand-weak:#fff1f2;
+  --brand-strong:#be123c;
+}
+body.theme-trust{ /* same as default */ }
+
+/* ====== Global ====== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font-ui);
+  font-size:var(--font-size-base);
+  background:var(--bg);
+  color:var(--fg);
+}
+
+/* ====== Header / Topbar ====== */
+.topbar{
+  position:sticky; top:0;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  padding:10px 12px;
+  display:flex; gap:12px; align-items:center; z-index:10;
+}
+.topbar .brand{
+  display:flex; align-items:center; gap:10px;
+}
+.topbar .logo{
+  width:28px; height:28px; border-radius:8px;
+  background:var(--brand);
+  display:inline-block;
+  box-shadow:inset 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.12);
+}
+.topbar h1{
+  font-size:var(--font-size-h1);
+  margin:0;
+}
+.topbar nav{display:flex; gap:8px; flex-wrap:wrap}
+.tab-btn{
+  border:1px solid var(--line);
+  background:#fff;
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.tab-btn:hover{border-color:var(--brand)}
+
+/* ====== Containers ====== */
+.container{max-width:860px; margin:20px auto; padding:0 16px}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.highlight{border-color:var(--brand-weak); background:var(--brand-weak)}
+
+/* ====== Text ====== */
+h2{margin:.2rem 0 .6rem; font-size:var(--font-size-h2)}
+h3{margin:.2rem 0 .4rem}
+.meta{color:var(--muted); font-size:var(--font-size-small)}
+
+/* ====== Lists ====== */
+.list{list-style:none; margin:0; padding:0; display:grid; gap:10px}
+.list li{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  background:#fafafa;
+}
+
+/* ====== Inputs ====== */
+input,select,textarea{
+  width:100%; padding:12px;
+  border:1px solid var(--line);
+  border-radius:12px; margin:8px 0;
+  font:inherit;
+}
+
+/* ====== Links ====== */
+a{color:var(--brand); text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ====== Footer ====== */
+.footer{padding:30px 16px; text-align:center; color:var(--muted)}
+
+/* ====== Tabs ====== */
+.tab{display:none}
+.tab.active{display:block}
+
+/* ====== Badges ====== */
+.badge{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--line); font-size:12px; background:#fff}
+
+/* ====== Disclaimer ====== */
+.disclaimer{background:#fff3cd; border:1px solid #ffe69c; padding:10px; border-radius:10px}
