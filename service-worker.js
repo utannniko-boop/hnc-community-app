@@ -1,33 +1,21 @@
-// service-worker.js — High Performance (Navigation Preload 有効)
+// service-worker.js — Navigation Preload 安定化版
 // -------------------------------------------------------------
-
-// ⚠ 必ずバージョンを上げてデプロイ（キャッシュ破棄のため）
-const CACHE_VER  = 'v5';
+const CACHE_VER  = 'v6';
 const CACHE_NAME = `hnc-pwa-${CACHE_VER}`;
 
-// クリティカルアセット（初回表示に必要な最小限）
 const PRECACHE = [
-  '/',                     // ルート
-  '/index.html',           // HTML
-  '/style.css?v=31',       // CSS（バージョンはあなたの値に合わせて）
-  '/app.js?v=31',          // JS（同上）
-  '/manifest.json',        // PWA
-  '/icon.png',             // アイコン
+  '/', '/index.html',
+  '/style.css?v=31',
+  '/app.js?v=31',
+  '/manifest.json', '/icon.png',
 ];
 
-// 外部APIなど「キャッシュしない(or 短期)」URL判定
+// 外部API等はキャッシュしない
 const isBypassCache = (url) => {
   const u = new URL(url, self.location.origin);
-  // 1) クロスオリジンの治験APIは常にネット優先（opaque増殖を防ぐ）
-  if (u.hostname !== self.location.hostname) return true;
-  // 2) 任意に追加（例：/api/ など）
-  // if (u.pathname.startsWith('/api/')) return true;
-  return false;
+  return u.origin !== self.location.origin;
 };
 
-// -------------------------------------------------------------
-// Install: コアファイルを先読み（Precache）
-// -------------------------------------------------------------
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -36,17 +24,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// -------------------------------------------------------------
-// Activate: 古いキャッシュ削除 + Navigation Preload 有効化
-// -------------------------------------------------------------
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
+    // 古いキャッシュ削除
     const keys = await caches.keys();
-    await Promise.all(
-      keys.map((k) => (k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve())
-    );
+    await Promise.all(keys.map(k => (k !== CACHE_NAME) ? caches.delete(k) : null));
 
-    // Navigation Preload を有効化（重要）
+    // Navigation Preload 有効化（対応環境のみ）
     if (self.registration.navigationPreload) {
       await self.registration.navigationPreload.enable();
     }
@@ -54,73 +38,64 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-// -------------------------------------------------------------
-// Fetch: 高速初期表示のための戦略
-//  - Document: preloadResponse → network → cache → /index.html
-//  - 静的アセット(CSS/JS/画像): Stale-While-Revalidate
-//  - 外部APIなどはネット直行（bypass）
-// -------------------------------------------------------------
+// ---------------------------------------------
+// 重要ポイント：
+// - navigation では *必ず* respondWith 内で preloadResponse を await
+// - さらに waitUntil にも preloadResponse をぶら下げて、Promise を放置しない
+// ---------------------------------------------
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  const req = event.request;
 
-  // 1) Navigation / Document
-  if (request.mode === 'navigate' || request.destination === 'document') {
+  // Document / Navigation
+  if (req.mode === 'navigate' || req.destination === 'document') {
+    // preloadResponse が発火したなら、解決まで待つ（警告抑止）
+    if (self.registration.navigationPreload && event.preloadResponse) {
+      event.waitUntil(event.preloadResponse.catch(() => {}));
+    }
+
     event.respondWith((async () => {
       try {
-        // A. Preload（ブラウザが並列で取りにいったもの）を**必ず await**
-        const preload = await event.preloadResponse;
-        if (preload) return preload;
-
-        // B. ネットワーク（最速）
-        const net = await fetch(request);
-        // HTML は都度変わる可能性もあるため、ここではキャッシュに保存しない
+        // 1) Preload を最優先で利用
+        if (self.registration.navigationPreload && event.preloadResponse) {
+          const pre = await event.preloadResponse;
+          if (pre) return pre;
+        }
+        // 2) ネット
+        const net = await fetch(req);
         return net;
-      } catch (err) {
-        // C. オフライン時はキャッシュ or SPA fallback
-        const cached = await caches.match(request);
+      } catch {
+        // 3) オフライン時フォールバック
+        const cached = await caches.match(req);
         return cached || caches.match('/index.html');
       }
     })());
     return;
   }
 
-  // 2) 外部API や bypass 対象はネット直行（キャッシュしない）
-  if (isBypassCache(request.url)) {
+  // 外部APIなどはネット直行
+  if (isBypassCache(req.url)) {
     event.respondWith((async () => {
-      try {
-        return await fetch(request);
-      } catch (err) {
-        // API はフォールバックなし（必要ならここでダミー応答を作る）
-        return new Response('', { status: 504, statusText: 'Gateway Timeout' });
-      }
+      try { return await fetch(req); }
+      catch { return new Response('', { status: 504, statusText: 'Gateway Timeout' }); }
     })());
     return;
   }
 
-  // 3) 静的リソース（CSS/JS/画像等）は「Stale-While-Revalidate」
+  // 静的資産は Stale-While-Revalidate
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
-    const fetchAndUpdate = fetch(request)
-      .then((res) => {
-        // 応答が有効ならキャッシュ更新
-        if (res && (res.status === 200 || res.type === 'opaqueredirect' || res.type === 'basic')) {
-          cache.put(request, res.clone());
-        }
-        return res;
-      })
-      .catch(() => cached); // ネット失敗時は手元のキャッシュを返す
-
-    // 手元にあれば即返して体感を速く、その裏で更新
-    return cached || fetchAndUpdate;
+    const cached = await cache.match(req);
+    const updating = fetch(req).then(res => {
+      if (res && (res.status === 200 || res.type === 'basic' || res.type === 'opaqueredirect')) {
+        cache.put(req, res.clone());
+      }
+      return res;
+    }).catch(() => cached);
+    return cached || updating;
   })());
 });
 
-// -------------------------------------------------------------
-// オプション：メッセージ経由で手動アップデート（任意）
-// -------------------------------------------------------------
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+// 手動アップデート用（任意）
+self.addEventListener('message', (e) => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
