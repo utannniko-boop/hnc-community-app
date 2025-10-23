@@ -2,8 +2,9 @@
    HNC Community PWA - app.js（全置換）
    - 部位検索＋組織型検索（histology）
    - 組織型から ClinicalTrials.gov を連動表示
+   - ClinicalTrials.gov 失敗時は JP/EN 横断検索リンクを自動提示
    - TRIAL_QUERY の重複定義をガード
-   - resources.json が無くても FALLBACK で動く
+   - resources.json が無くても FALLBACK で動く（cache-bust付）
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -35,25 +36,25 @@ const DATA_FALLBACK = {
     {
       id:"adenoid-cystic",
       name:"腺様嚢胞癌（Adenoid cystic carcinoma）",
-      aliases:["腺様嚢胞癌","adenoid cystic carcinoma","ACC"],
+      aliases:["腺様嚢胞癌","腺様のう胞がん","adenoid cystic carcinoma","Adenoid-cystic carcinoma","ACC"],
       siteIds:["salivary","nasal","oral"]
     },
     {
       id:"mucoepidermoid",
       name:"粘表皮癌（Mucoepidermoid carcinoma）",
-      aliases:["粘表皮癌","mucoepidermoid carcinoma","MEC"],
+      aliases:["粘表皮癌","粘表皮がん","mucoepidermoid carcinoma","MEC"],
       siteIds:["salivary","nasal","oral","oropharynx"]
     },
     {
       id:"mucosal-melanoma",
       name:"悪性黒色腫（粘膜）",
-      aliases:["悪性黒色腫","メラノーマ","malignant melanoma","mucosal melanoma"],
+      aliases:["悪性黒色腫","メラノーマ","melanoma","mucosal melanoma","mucosal malignant melanoma"],
       siteIds:["nasal","oral","oropharynx"]
     },
     {
       id:"lymphoma",
       name:"リンパ腫",
-      aliases:["リンパ腫","lymphoma","悪性リンパ腫"],
+      aliases:["リンパ腫","悪性リンパ腫","lymphoma"],
       siteIds:["oropharynx","nasopharynx"]
     },
     {
@@ -90,7 +91,8 @@ async function boot(){
 async function loadData(){
   let ok = false;
   try{
-    const res = await fetch('./resources.json', { cache: 'no-store' });
+    // cache-bust
+    const res = await fetch('./resources.json?v=3', { cache: 'no-store' });
     if(res.ok){
       const json = await res.json();
       if (json && Array.isArray(json.cancers) && json.cancers.length){
@@ -396,7 +398,7 @@ async function renderCommunityContent(cancerId){
   try { filterTreatments(cancerId); } catch(e){}
   try { filterLife(cancerId); } catch(e){}
 
-  // ← 組織型コンテキストがあれば優先して治験を取得（使い捨て）
+  // 組織型コンテキストがあれば優先して治験を取得（使い捨て）
   try {
     const histo = window.HISTO_CONTEXT || null;
     await loadTrials(cancerId, { histologyId: histo });
@@ -478,13 +480,13 @@ if (!window.TRIAL_QUERY_HISTO) {
   };
 }
 
-// クエリ式を構成
+// ClinicalTrials 用クエリ式
 function buildTrialsExpr({ cancerId=null, histologyId=null } = {}){
   const CQ = window.TRIAL_QUERY || {};
   const HQ = window.TRIAL_QUERY_HISTO || {};
-  if (histologyId && HQ[histologyId]) return HQ[histologyId];                    // ① 組織型優先
-  if (cancerId && CQ[cancerId])       return CQ[cancerId];                        // ② 部位
-  return (CQ._default || '"Head+and+Neck+Cancer"');                               // ③ デフォルト
+  if (histologyId && HQ[histologyId]) return HQ[histologyId]; // ① 組織型優先
+  if (cancerId && CQ[cancerId])       return CQ[cancerId];     // ② 部位
+  return (CQ._default || '"Head+and+Neck+Cancer"');            // ③ デフォルト
 }
 
 // ClinicalTrials.gov v1 StudyFields API（上位10件）
@@ -505,6 +507,47 @@ async function fetchTrials(params = {}){
   }));
 }
 
+// ClinicalTrials.gov 失敗時のフォールバックリンクを生成
+function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
+  const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
+  const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
+
+  // キーワード（JP/EN）
+  const jpKey = histo?.aliases?.[0] || histo?.name || cancer?.name || '頭頸部がん';
+  // 英語は aliases の英語らしいもの or name 内の英語括弧 or 既知の部位英語
+  let enKey = 'head and neck cancer';
+  if (histo) {
+    enKey = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || enKey;
+  } else if (cancer) {
+    // 部位の英語ラベル粗推定
+    const SITE_EN_LABELS = {
+      oral: 'oral cavity cancer',
+      oropharynx: 'oropharyngeal cancer',
+      hypopharynx: 'hypopharyngeal cancer',
+      nasopharynx: 'nasopharyngeal carcinoma',
+      larynx: 'laryngeal cancer',
+      nasal: 'nasal cavity or paranasal sinus cancer',
+      salivary: 'salivary gland cancer OR parotid gland cancer OR submandibular gland cancer OR sublingual gland cancer'
+    };
+    enKey = SITE_EN_LABELS[cancer.id] || enKey;
+  }
+
+  const qJP = encodeURIComponent(`${jpKey} 治験`);
+  const qEN = encodeURIComponent(`${enKey} clinical trial`);
+
+  box.innerHTML = `
+    <div class="card">
+      <h3>自動検索リンク（代替表示）</h3>
+      <p class="meta">APIからの取得に失敗したため、検索リンクを提示します。</p>
+      <ul class="list small">
+        <li><a href="https://www.google.com/search?q=${qJP}" target="_blank" rel="noopener">Google（日本語）: 「${escapeHtml(jpKey)} 治験」</a></li>
+        <li><a href="https://www.google.com/search?q=${qEN}" target="_blank" rel="noopener">Google（英語）: “${escapeHtml(enKey)} clinical trial”</a></li>
+        <li><a href="https://clinicaltrials.gov/search?cond=${qEN}" target="_blank" rel="noopener">ClinicalTrials.gov 内検索（英語）</a></li>
+      </ul>
+    </div>
+  `;
+}
+
 async function loadTrials(cancerId, { histologyId=null } = {}){
   const box = document.getElementById('trials');
   if (!box) return;
@@ -512,7 +555,8 @@ async function loadTrials(cancerId, { histologyId=null } = {}){
   try {
     const trials = await fetchTrials({ cancerId, histologyId });
     if (!trials.length){
-      box.innerHTML = '<div class="meta">該当する治験が見つかりませんでした。</div>';
+      // 0件時もフォールバック検索リンクを提示
+      renderTrialsFallback(box, { cancerId, histologyId });
       return;
     }
     box.innerHTML = `
@@ -527,7 +571,8 @@ async function loadTrials(cancerId, { histologyId=null } = {}){
       </ul>`;
   } catch (e){
     console.error('trials error', e);
-    box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
+    // 失敗時はフォールバック検索リンク
+    renderTrialsFallback(box, { cancerId, histologyId });
   }
 }
 
