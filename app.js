@@ -1,5 +1,8 @@
 /* =========================================================
-   HNC Community PWA - app.js (全置換用・完成版)
+   HNC Community PWA - app.js (全置換用・改善版)
+   - TRIAL_QUERY の重複定義を解消
+   - topics クリックで開閉／URLあれば外部リンク
+   - resources.json 未読でもFALLBACKで動作
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -40,8 +43,6 @@ if (document.readyState === 'loading') {
 async function boot(){
   await loadData();         // データ取得（失敗時は FALLBACK）
   initAll();                // 各UI初期化
-
-  // ハッシュで #community に来たら確実に初期化
   window.addEventListener('hashchange', () => {
     if (location.hash === '#community') ensureCommunityReady();
   });
@@ -76,7 +77,6 @@ function initAll(){
   try { initTreatments(); } catch(e){ console.warn('initTreatments err', e); }
   try { initLife(); } catch(e){ console.warn('initLife err', e); }
   try { renderBookmarks(); } catch(e){}
-  // コミュニティを開いた/表示されたら空でないように
   ensureCommunityReady();
 }
 
@@ -278,7 +278,7 @@ function renderCommunityContent(cancerId){
     });
   }
 
-  // 連動描画（任意）
+  // 連動描画
   try { filterTreatments(cancerId); } catch(e){}
   try { filterLife(cancerId); } catch(e){}
   try { loadTrials(cancerId); } catch(e){}
@@ -332,7 +332,7 @@ function renderBookmarks(){
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
 
-/* =================== ClinicalTrials.gov 連携 =================== */
+/* =================== ClinicalTrials.gov 連携（※ここだけに統一） =================== */
 const TRIAL_QUERY = {
   oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
   oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
@@ -384,108 +384,11 @@ async function loadTrials(cancerId){
     box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
   }
 }
+
+/* ========== ユーティリティ ========== */
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
-
-/* =================== Supabase 投稿（未設定ならスキップ） =================== */
-async function loadPosts(cancerId){
-  const ul = document.getElementById('post-list');
-  if (!ul) return;
-  if (!window.supabase){
-    ul.innerHTML = '<li class="meta">投稿機能は未設定です（supabase-client.js にURLとAnonキーを設定すると有効化）。</li>';
-    return;
-  }
-  try{
-    const { data, error } = await supabase
-      .from('posts')
-      .select('id, created_at, nick, body, cancer_id, hidden, reports')
-      .eq('hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(30);
-
-    if (error) throw error;
-    const items = (data || []).filter(p => !cancerId || p.cancer_id === cancerId);
-    if (!items.length){
-      ul.innerHTML = '<li class="meta">まだ投稿はありません。最初の投稿をどうぞ！</li>';
-      return;
-    }
-    ul.innerHTML = items.map(p => `
-      <li data-id="${p.id}">
-        <div><strong>${escapeHtml(p.nick || '匿名')}</strong> <span class="meta">${new Date(p.created_at).toLocaleString()}</span></div>
-        <div>${escapeHtml(p.body || '')}</div>
-        <div class="meta">
-          <button class="linklike" data-action="report">通報</button>
-        </div>
-      </li>
-    `).join('');
-
-    // 通報ボタン（RPCがあれば increment_reports を使うのが理想）
-    ul.querySelectorAll('button[data-action="report"]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const li = e.target.closest('li[data-id]');
-        const id = li?.dataset.id;
-        if (!id) return;
-        try{
-          if (supabase.rpc) {
-            await supabase.rpc('increment_reports', { post_id: id });
-          } else {
-            // 代替: とりあえず reports を +1（RLS設定に要注意）
-            await supabase.from('posts').update({ reports: (li.dataset.reports|0)+1 }).eq('id', id);
-          }
-          alert('通報しました。ありがとうございます。');
-        }catch(err){
-          console.error('report error', err);
-          alert('通報に失敗しました。時間をおいてお試しください。');
-        }
-      });
-    });
-
-  }catch(err){
-    console.error('loadPosts error', err);
-    ul.innerHTML = '<li class="meta">投稿の取得に失敗しました。</li>';
-  }
-}
-function initPosting(cancerIdProvider){
-  const form = document.getElementById('post-form');
-  const ul   = document.getElementById('post-list');
-  if(!form || !ul) return;
-
-  if (!window.supabase){
-    form.addEventListener('submit', (e)=>{ e.preventDefault(); alert('投稿機能は未設定です。supabase-client.js を設定してください。'); });
-    return;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const nick = (document.getElementById('post-nick')?.value || '').trim();
-    const body = (document.getElementById('post-text')?.value || '').trim();
-    if (!body) { alert('本文を入力してください'); return; }
-
-    const cancerId = typeof cancerIdProvider === 'function' ? cancerIdProvider() : null;
-
-    try{
-      const { error } = await supabase.from('posts').insert({
-        nick: nick || null,
-        body,
-        cancer_id: cancerId || null
-      });
-      if (error) throw error;
-      (document.getElementById('post-text') || {}).value = '';
-      await loadPosts(cancerId);
-    }catch(err){
-      console.error('insert error', err);
-      alert('投稿に失敗しました。時間をおいてお試しください。');
-    }
-  });
-}
-// 初期化の最後で一度だけ投稿機能を有効化（選択中のがんIDを渡す）
-document.addEventListener('DOMContentLoaded', () => {
-  initPosting(() => {
-    const sel = document.getElementById('community-select');
-    return sel ? sel.value || null : null;
-  });
-});
 
 /* =================== 強制ポピュレーター（保険） =================== */
 (function forcePopulateCommunity(){
@@ -560,71 +463,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (location.hash === '#community') setTimeout(populateOnce, 0);
   });
 })();
-
-/* =================== 最後に：開発用の小テスト（任意） =================== */
-// window.addEventListener('DOMContentLoaded', () => {
-//   console.log('DATA.cancers length:', Array.isArray(DATA.cancers) ? DATA.cancers.length : 0);
-// });
-
-/* ======== ClinicalTrials.gov 連携：治験の自動取得 ======== */
-
-// がん種ID → ClinicalTrials.gov 検索クエリ
-const TRIAL_QUERY = {
-  oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
-  oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
-  hypopharynx: 'hypopharyngeal+OR+postcricoid+OR+"pyriform+sinus"',
-  nasopharynx: 'nasopharyngeal+OR+NPC',
-  larynx: 'laryngeal+OR+glottic+OR+supraglottic+OR+subglottic',
-  nasal: '"nasal+cavity"+OR+"paranasal+sinus"+OR+"maxillary+sinus"',
-  salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
-  _default: '"Head+and+Neck+Cancer"'
-};
-
-// ClinicalTrials.gov v1 StudyFields API を使用（上位10件）
-async function fetchTrialsByCancerId(cancerId){
-  const expr = TRIAL_QUERY[cancerId] || TRIAL_QUERY._default;
-  const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
-  const json = await res.json();
-  const rows = json?.StudyFieldsResponse?.StudyFields || [];
-  return rows.map(r => ({
-    id: r.NCTId?.[0],
-    title: r.BriefTitle?.[0],
-    cond: (r.Condition||[]).join(', '),
-    status: r.OverallStatus?.[0],
-    country: (r.LocationCountry||[]).join(', '),
-    updated: r.LastUpdatePostDate?.[0]
-  }));
-}
-
-async function loadTrials(cancerId){
-  const box = document.getElementById('trials');
-  if (!box) return;
-  box.innerHTML = '<div class="meta">読み込み中…</div>';
-  try {
-    const trials = await fetchTrialsByCancerId(cancerId);
-    if (!trials.length){
-      box.innerHTML = '<div class="meta">該当する治験が見つかりませんでした。</div>';
-      return;
-    }
-    box.innerHTML = `
-      <ul class="list small">
-        ${trials.map(t => `
-          <li>
-            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener"><strong>${escapeHtml(t.title || t.id)}</strong></a>
-            <div class="meta">ID: ${t.id} ／ 状況: ${escapeHtml(t.status||'')} ／ 更新: ${escapeHtml(t.updated||'')}</div>
-            ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
-          </li>
-        `).join('')}
-      </ul>`;
-  } catch (e){
-    console.error('trials error', e);
-    box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
-  }
-}
-
-// HTMLエスケープ（XSS対策）
-function escapeHtml(s){
-  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
