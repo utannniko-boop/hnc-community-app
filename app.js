@@ -1,3 +1,35 @@
+// ---- データ入れ物（初期値）----
+let DATA = { cancers: [], treatments: [], life: [] };
+
+// ---- resources.json を読む（失敗時はメッセージ表示）----
+async function loadData(){
+  const list = document.getElementById('cancer-list');
+  try{
+    // 重要：相対パス './resources.json' ＋ キャッシュ無効化
+    const res = await fetch('./resources.json', { cache: 'no-store' });
+    if(!res.ok) throw new Error(`resources.json not found (${res.status})`);
+    DATA = await res.json();
+  }catch(err){
+    console.error('Failed to load resources.json', err);
+    if(list){
+      list.innerHTML = '<li>データが読み込めませんでした。<br>① resources.json がリポジトリ直下にあるか<br>② ファイル名の大文字小文字<br>③ 強制再読み込み（Ctrl/Cmd+Shift+R）を実施 を確認してください。</li>';
+    }
+  }
+
+  // 読み込み後に各UI初期化（存在する関数だけ呼びます）
+  try { initHome(); } catch(e){}
+  try { initCommunity(); } catch(e){}
+  try { initTreatments(); } catch(e){}
+  try { initLife(); } catch(e){}
+  try { renderBookmarks(); } catch(e){}
+}
+
+// ---- ページ読み込み時にデータ読込スタート ----
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadData);
+} else {
+  loadData();
+}
 function initHome(){
   const list = document.getElementById('cancer-list');
   const input = document.getElementById('cancer-search');
