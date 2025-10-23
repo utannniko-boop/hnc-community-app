@@ -565,3 +565,66 @@ document.addEventListener('DOMContentLoaded', () => {
 // window.addEventListener('DOMContentLoaded', () => {
 //   console.log('DATA.cancers length:', Array.isArray(DATA.cancers) ? DATA.cancers.length : 0);
 // });
+
+/* ======== ClinicalTrials.gov 連携：治験の自動取得 ======== */
+
+// がん種ID → ClinicalTrials.gov 検索クエリ
+const TRIAL_QUERY = {
+  oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
+  oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
+  hypopharynx: 'hypopharyngeal+OR+postcricoid+OR+"pyriform+sinus"',
+  nasopharynx: 'nasopharyngeal+OR+NPC',
+  larynx: 'laryngeal+OR+glottic+OR+supraglottic+OR+subglottic',
+  nasal: '"nasal+cavity"+OR+"paranasal+sinus"+OR+"maxillary+sinus"',
+  salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
+  _default: '"Head+and+Neck+Cancer"'
+};
+
+// ClinicalTrials.gov v1 StudyFields API を使用（上位10件）
+async function fetchTrialsByCancerId(cancerId){
+  const expr = TRIAL_QUERY[cancerId] || TRIAL_QUERY._default;
+  const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
+  const json = await res.json();
+  const rows = json?.StudyFieldsResponse?.StudyFields || [];
+  return rows.map(r => ({
+    id: r.NCTId?.[0],
+    title: r.BriefTitle?.[0],
+    cond: (r.Condition||[]).join(', '),
+    status: r.OverallStatus?.[0],
+    country: (r.LocationCountry||[]).join(', '),
+    updated: r.LastUpdatePostDate?.[0]
+  }));
+}
+
+async function loadTrials(cancerId){
+  const box = document.getElementById('trials');
+  if (!box) return;
+  box.innerHTML = '<div class="meta">読み込み中…</div>';
+  try {
+    const trials = await fetchTrialsByCancerId(cancerId);
+    if (!trials.length){
+      box.innerHTML = '<div class="meta">該当する治験が見つかりませんでした。</div>';
+      return;
+    }
+    box.innerHTML = `
+      <ul class="list small">
+        ${trials.map(t => `
+          <li>
+            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener"><strong>${escapeHtml(t.title || t.id)}</strong></a>
+            <div class="meta">ID: ${t.id} ／ 状況: ${escapeHtml(t.status||'')} ／ 更新: ${escapeHtml(t.updated||'')}</div>
+            ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
+          </li>
+        `).join('')}
+      </ul>`;
+  } catch (e){
+    console.error('trials error', e);
+    box.innerHTML = '<div class="meta">治験情報の取得に失敗しました（時間をおいて再試行してください）。</div>';
+  }
+}
+
+// HTMLエスケープ（XSS対策）
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
