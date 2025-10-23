@@ -12,6 +12,27 @@
 
   <link rel="stylesheet" href="style.css?v=35" />
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫、治験・論文検索まで網羅した無料PWAアプリ" />
+  <style>
+    /* 最低限の見た目（style.cssが読めない時の保険） */
+    :root{--ink:#223;--muted:#667}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#fafafa;color:var(--ink)}
+    .topbar{position:sticky;top:0;background:linear-gradient(90deg,#f6c8d8,#f0e6ef);padding:10px 12px;border-bottom:1px solid #e7c;z-index:10}
+    .topbar h1{margin:0;font-size:18px}
+    .topbar nav{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+    .topbar .tab-btn{border:0;background:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
+    .tab-btn.active{outline:2px solid #a03962}
+    .container{max-width:980px;margin:20px auto;padding:0 12px}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px;margin-bottom:16px}
+    .meta{color:var(--muted);font-size:13px}
+    .list{list-style:none;margin:8px 0 0;padding:0}
+    .list li{padding:8px 0;border-bottom:1px dashed #eee}
+    .badge{display:inline-block;background:#ffe9f1;color:#a03962;border:1px solid #f3b7c5;border-radius:999px;padding:2px 8px;font-size:12px}
+    .tab{display:none}.tab.active{display:block}
+    .subtabs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+    .subtabs .life-btn{border:1px solid #eee;background:#fff;padding:6px 10px;border-radius:8px;cursor:pointer}
+    .subtabs .life-btn.active{background:#fff8fb;border-color:#f3b7c5}
+    select,input{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px}
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -35,8 +56,8 @@
       </div>
 
       <div class="card">
-        <h3>🔍 統合検索</h3>
-        <input id="global-search" placeholder="例：喉頭がん / 腺様嚢胞癌 / 放射線治療" />
+        <h3>🔍 統合検索（部位 / 組織型 / 治験・論文）</h3>
+        <input id="global-search" placeholder="例：喉頭がん / 腺様嚢胞癌 / MEC / C32 / oropharyngeal ..." />
         <ul id="global-results" class="list"></ul>
       </div>
     </section>
@@ -45,8 +66,11 @@
     <section id="community" class="tab">
       <div class="card">
         <h2>コミュニティ</h2>
-        <p>がんの種類を選ぶと、関連トピック・ガイドライン・論文検索・治験情報を表示します。</p>
-        <select id="community-select"></select>
+        <p class="meta">がん種と（必要なら）組織型を選ぶと、根拠リンク／研究リンク／治験を自動表示します。</p>
+        <div style="display:grid; gap:8px; grid-template-columns:1fr; margin:8px 0;">
+          <select id="community-select"></select>
+          <select id="histology-select"></select>
+        </div>
         <div id="community-content"></div>
       </div>
 
@@ -63,7 +87,7 @@
       <div class="card">
         <h3>最新の治験・研究（ClinicalTrials.gov）</h3>
         <div id="trials">
-          <div class="meta">がん種を選ぶと自動取得します。</div>
+          <div class="meta">選択内容に応じて自動取得します。</div>
           <div id="trials-controls" style="margin:.5rem 0;"></div>
           <div id="trials-list-host"></div>
         </div>
@@ -105,7 +129,7 @@
     <small>&copy; 2025 HNC Community</small>
   </footer>
 
-  <script src="app.js?v=36"></script>
+  <script src="app.js?v=37"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js?v=35');
