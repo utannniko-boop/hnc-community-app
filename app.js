@@ -225,3 +225,62 @@ function initCommunity(){
 
 // 既存の loadData() の中から呼ばれている想定：
 // try { initCommunity(); } catch(e){}
+/* ===== 強制初期化（コミュニティ・ドロップダウンが空の時用） ===== */
+(function forceInitCommunity(){
+  document.addEventListener('DOMContentLoaded', async () => {
+    // 1) resources.json を未読なら読み込む（キャッシュ無効）
+    if (!window.DATA || !Array.isArray(window.DATA.cancers) || window.DATA.cancers.length === 0) {
+      try {
+        const res = await fetch('./resources.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('resources.json not found: ' + res.status);
+        window.DATA = await res.json();
+      } catch (e) {
+        console.error('[forceInitCommunity] 資源読込失敗', e);
+      }
+    }
+
+    // 2) セレクトと描画先を取得
+    const sel  = document.getElementById('community-select');
+    const wrap = document.getElementById('community-content');
+    if (!sel || !wrap) {
+      console.warn('[forceInitCommunity] 必要な要素が見つかりません (community-select / community-content)');
+      return;
+    }
+
+    // 3) がん種を流し込む
+    sel.innerHTML = '';
+    sel.insertAdjacentHTML('beforeend', `<option value="" disabled selected>がんの種類を選んでください</option>`);
+    if (Array.isArray(window.DATA?.cancers)) {
+      sel.insertAdjacentHTML(
+        'beforeend',
+        window.DATA.cancers.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      );
+    } else {
+      wrap.innerHTML = '<p class="meta">データが読み込めていません。resources.json の配置とスペルを確認してください。</p>';
+    }
+
+    // 4) 選択時に内容を表示（renderCommunityContent があれば利用）
+    sel.addEventListener('change', (e) => {
+      const id = e.target.value;
+      if (!id) return;
+      if (typeof renderCommunityContent === 'function') {
+        renderCommunityContent(id);
+      } else {
+        // 代替描画：最低限の内容
+        const c = (window.DATA.cancers || []).find(x => x.id === id);
+        if (!c) return;
+        const aliases = (c.aliases || []).join('・');
+        const topics  = (c.topics  || []).map(t => `<li><strong>${t.title}</strong><div class="meta">${t.desc||''}</div></li>`).join('') || '<li>トピック準備中</li>';
+        const links   = (c.links   || []).map(l => `<li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>`).join('') || '<li>リンク準備中</li>';
+        wrap.innerHTML = `
+          <div class="card">
+            <h3>${c.name} <span class="badge">${c.icd||''}</span></h3>
+            ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
+          </div>
+          <div class="card"><h3>話題・トピック</h3><ul class="list small">${topics}</ul></div>
+          <div class="card"><h3>関連リンク</h3><ul class="list small">${links}</ul></div>
+        `;
+      }
+    });
+  });
+})();
