@@ -34,7 +34,7 @@
       </div>
       <div class="card">
         <h3>がんの種類で探す</h3>
-        <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん…" />
+        <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん、耳下腺癌、C32…" />
         <ul id="cancer-list" class="list"></ul>
       </div>
       <div class="card">
@@ -43,41 +43,34 @@
       </div>
     </section>
 
-   <section id="community" class="tab">
-  <div class="card">
-    <h2>コミュニティ（種類別）</h2>
-    <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
-    <!-- 🔽 JSでデータを流し込むセレクトボックス -->
-    <select id="community-select"></select>
-    <!-- 🔽 選択後に内容を表示するエリア -->
-    <div id="community-content"></div>
-  </div>
+    <!-- コミュニティ -->
+    <section id="community" class="tab">
+      <div class="card">
+        <h2>コミュニティ（種類別）</h2>
+        <p>がんの種類を選ぶと、関連する話題・リンク・支援先が表示されます。</p>
+        <select id="community-select"></select>
+        <div id="community-content"></div>
+      </div>
 
-  <div class="card">
-    <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
-    <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
-    <div id="trials"></div>
-  </div>
+      <div class="card">
+        <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
+        <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
+        <div id="trials"></div>
+      </div>
 
-  <div class="card">
-    <h3>コミュニティ投稿（匿名）</h3>
-    <p class="meta">
-      個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。
-    </p>
-    <form id="post-form">
-      <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
-      <textarea
-        id="post-text"
-        placeholder="体験談・質問・生活の工夫など（500字以内）"
-        maxlength="500"
-        rows="4"
-      ></textarea>
-      <button class="tab-btn" type="submit">投稿する</button>
-    </form>
-    <ul id="post-list" class="list"></ul>
-  </div>
-</section>
+      <div class="card">
+        <h3>コミュニティ投稿（匿名）</h3>
+        <p class="meta">個人情報・診断や処方の断定は書かないでください。違反投稿は通報で非表示になります。</p>
+        <form id="post-form">
+          <input id="post-nick" placeholder="ニックネーム（任意・匿名可）" />
+          <textarea id="post-text" placeholder="体験談・質問・生活の工夫など（500字以内）" maxlength="500" rows="4"></textarea>
+          <button class="tab-btn" type="submit">投稿する</button>
+        </form>
+        <ul id="post-list" class="list"></ul>
+      </div>
+    </section>
 
+    <!-- 治療情報 -->
     <section id="treatments" class="tab">
       <div class="card">
         <h2>治療の最新情報（外部リンク集）</h2>
@@ -86,6 +79,7 @@
       </div>
     </section>
 
+    <!-- 生活の工夫 -->
     <section id="life" class="tab">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
@@ -94,6 +88,7 @@
       </div>
     </section>
 
+    <!-- このアプリ -->
     <section id="about" class="tab">
       <div class="card">
         <h2>このアプリについて</h2>
@@ -111,7 +106,7 @@
       </div>
     </section>
 
-    <!-- Admin は起動時 active にしない -->
+    <!-- 管理（起動時 active にしない） -->
     <section id="admin" class="tab">
       <div class="card">
         <h2>モデレーター管理</h2>
@@ -139,9 +134,11 @@
     <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- Supabase（未設定なら無害） -->
   <script type="module" src="supabase-client.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Service Worker 登録（相対パス） -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js');
@@ -159,7 +156,7 @@
     })();
   </script>
 
-  <!-- ここが重要！ 外に出す！ -->
+  <!-- アプリ本体（※1回だけ読み込む！） -->
   <script src="./app.js"></script>
 </body>
 </html>
