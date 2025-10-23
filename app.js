@@ -1,8 +1,9 @@
 /* =========================================================
    HNC Community PWA - app.js (全置換用・改善版)
-   - TRIAL_QUERY の重複定義を解消
+   - TRIAL_QUERY の重複定義を解消（windowガード）
    - topics クリックで開閉／URLあれば外部リンク
-   - resources.json 未読でもFALLBACKで動作
+   - resources.json 未読でも FALLBACK で動作
+   - 「組織型で探す」を追加（initHistology）
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -28,10 +29,44 @@ const DATA_FALLBACK = {
   ],
   life: [
     {id:"oral-care",title:"放射線治療中の口腔ケア",category:"口腔ケア",body:"軟らかい歯ブラシ・フッ化物含嗽・無アルコールの洗口液。",cancerIds:["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]}
+  ],
+  /* ▼ 追加：組織型（FALLBACK） */
+  histologies: [
+    {
+      id:"adenoid-cystic",
+      name:"腺様嚢胞癌（Adenoid cystic carcinoma）",
+      aliases:["腺様嚢胞癌","adenoid cystic carcinoma","ACC"],
+      siteIds:["salivary","nasal","oral"]
+    },
+    {
+      id:"mucoepidermoid",
+      name:"粘表皮癌（Mucoepidermoid carcinoma）",
+      aliases:["粘表皮癌","mucoepidermoid carcinoma","MEC"],
+      siteIds:["salivary","nasal","oral","oropharynx"]
+    },
+    {
+      id:"mucosal-melanoma",
+      name:"悪性黒色腫（粘膜）",
+      aliases:["悪性黒色腫","メラノーマ","malignant melanoma","mucosal melanoma"],
+      siteIds:["nasal","oral","oropharynx"]
+    },
+    {
+      id:"lymphoma",
+      name:"リンパ腫",
+      aliases:["リンパ腫","lymphoma","悪性リンパ腫"],
+      siteIds:["oropharynx","nasopharynx"]
+    },
+    {
+      id:"sarcoma",
+      name:"肉腫",
+      aliases:["肉腫","sarcoma","横紋筋肉腫","骨肉腫","線維肉腫"],
+      siteIds:["oral","nasal","oropharynx"]
+    }
   ]
+  /* ▲ 追加ここまで */
 };
 
-let DATA = { cancers: [], treatments: [], life: [] };
+let DATA = { cancers: [], treatments: [], life: [], histologies: [] };
 
 /* =================== 起動 =================== */
 if (document.readyState === 'loading') {
@@ -43,6 +78,7 @@ if (document.readyState === 'loading') {
 async function boot(){
   await loadData();         // データ取得（失敗時は FALLBACK）
   initAll();                // 各UI初期化
+  // ハッシュで #community に来たら確実に初期化
   window.addEventListener('hashchange', () => {
     if (location.hash === '#community') ensureCommunityReady();
   });
@@ -56,7 +92,11 @@ async function loadData(){
     if(res.ok){
       const json = await res.json();
       if (json && Array.isArray(json.cancers) && json.cancers.length){
-        DATA = json;
+        DATA = { ...json };
+        // histologies が無ければ FALLBACK から補う
+        if (!Array.isArray(DATA.histologies)) {
+          DATA.histologies = DATA_FALLBACK.histologies;
+        }
         ok = true;
       }
     }
@@ -65,7 +105,7 @@ async function loadData(){
   }
   if(!ok){
     console.warn('[loadData] using FALLBACK data');
-    DATA = DATA_FALLBACK;
+    DATA = { ...DATA_FALLBACK };
   }
 }
 
@@ -73,6 +113,7 @@ async function loadData(){
 function initAll(){
   try { initTabs(); } catch(e){ console.warn('initTabs err', e); }
   try { initHome(); } catch(e){ console.warn('initHome err', e); }
+  try { initHistology(); } catch(e){ console.warn('initHistology err', e); } // 追加
   try { initCommunity(); } catch(e){ console.warn('initCommunity err', e); }
   try { initTreatments(); } catch(e){ console.warn('initTreatments err', e); }
   try { initLife(); } catch(e){ console.warn('initLife err', e); }
@@ -96,7 +137,7 @@ function switchTab(tab){
   if (tab === 'community') ensureCommunityReady();
 }
 
-/* =================== ホーム（検索） =================== */
+/* =================== ホーム（部位検索） =================== */
 function initHome(){
   const list = document.getElementById('cancer-list');
   const input = document.getElementById('cancer-search');
@@ -160,6 +201,76 @@ function initHome(){
     if (tab === 'community') selectCancer(id);
     if (tab === 'treatments') filterTreatments(id);
     if (tab === 'life') filterLife(id);
+  });
+}
+
+/* =================== ホーム（組織型検索） =================== */
+function initHistology(){
+  const list = document.getElementById('histo-list');
+  const input = document.getElementById('histo-search');
+  if(!list || !input) return;
+
+  // 表記ゆれ吸収（部位検索と同じ規則）
+  const norm = (s) => (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFKC')
+    .replace(/[ \u3000]/g, '')
+    .replace(/癌腫/g, 'がんしゅ')
+    .replace(/癌/g, 'がん')
+    .replace(/ガン/g, 'がん');
+
+  function render(filterText=''){
+    const f = norm(filterText);
+    list.innerHTML = '';
+
+    const arr = Array.isArray(DATA?.histologies) ? DATA.histologies
+              : (Array.isArray(DATA_FALLBACK?.histologies) ? DATA_FALLBACK.histologies : []);
+    if (arr.length === 0){
+      list.innerHTML = '<li>組織型データがありません。</li>';
+      return;
+    }
+
+    const items = arr.filter(h => {
+      if (!f) return true;
+      const fields = [h.name, ...(h.aliases||[])].map(norm).join('||');
+      return fields.includes(f);
+    });
+
+    if (items.length === 0){
+      list.innerHTML = '<li>該当する組織型が見つかりません。別表記でもお試しください。</li>';
+      return;
+    }
+
+    items.forEach(h => {
+      // この組織型が関係する部位（siteIds）をボタンで表示
+      const siteButtons = (h.siteIds || []).map(id => {
+        const site = (DATA.cancers || []).find(c => c.id === id) || (DATA_FALLBACK.cancers || []).find(c => c.id === id);
+        if (!site) return '';
+        return `<button class="tab-btn linklike" data-jump="community" data-cancer="${site.id}">${site.name}</button>`;
+      }).join(' ');
+
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <strong>${h.name}</strong>
+        <div class="meta">${(h.aliases||[]).join('・')}</div>
+        ${siteButtons ? `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">${siteButtons}</div>` : ''}
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  input.addEventListener('input', e => render(e.target.value));
+  input.addEventListener('compositionend', e => render(e.target.value));
+  render('');
+
+  // リスト内ボタンでコミュニティへジャンプ
+  list.addEventListener('click', e => {
+    const b = e.target.closest('button[data-jump][data-cancer]');
+    if(!b) return;
+    e.preventDefault();
+    switchTab(b.dataset.jump);
+    selectCancer(b.dataset.cancer);
   });
 }
 
@@ -414,7 +525,7 @@ function escapeHtml(s){
       ? DATA.cancers
       : FALLBACK;
     return arr;
-  }
+    }
 
   function populateOnce(){
     const sel = document.getElementById('community-select');
