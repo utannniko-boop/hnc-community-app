@@ -433,9 +433,51 @@ function renderBookmarks(){
   if(!ul) return;
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
+/* ========== ClinicalTrials.gov 連携（高精度・英語同義語拡張・UIフィルタ付き） ========== */
 
-/* ========== ClinicalTrials.gov 連携 ========== */
-// 狭い（specific）クエリ：部位
+// ---------- 英語シノニム（検索拡張） ----------
+const EN_SYNONYMS = {
+  // 部位
+  oral: [
+    'oral cavity cancer','tongue cancer','floor of mouth cancer','buccal mucosa cancer','gingival cancer'
+  ],
+  oropharynx: [
+    'oropharyngeal cancer','tonsil cancer','base of tongue cancer'
+  ],
+  hypopharynx: [
+    'hypopharyngeal cancer','pyriform sinus','postcricoid'
+  ],
+  nasopharynx: [
+    'nasopharyngeal carcinoma','NPC'
+  ],
+  larynx: [
+    'laryngeal cancer','glottic','supraglottic','subglottic'
+  ],
+  nasal: [
+    'nasal cavity cancer','paranasal sinus cancer','maxillary sinus cancer','ethmoid sinus cancer'
+  ],
+  salivary: [
+    'salivary gland cancer','parotid gland cancer','submandibular gland cancer','sublingual gland cancer'
+  ],
+  // 組織型
+  'adenoid-cystic': [
+    'adenoid cystic carcinoma','ACC'
+  ],
+  'mucoepidermoid': [
+    'mucoepidermoid carcinoma','MEC'
+  ],
+  'mucosal-melanoma': [
+    'mucosal melanoma','malignant melanoma of mucosa'
+  ],
+  lymphoma: [
+    'head and neck lymphoma','extranodal lymphoma'
+  ],
+  sarcoma: [
+    'head and neck sarcoma','rhabdomyosarcoma','fibrosarcoma','osteosarcoma'
+  ]
+};
+
+// ---------- 既存の狭い式（後方互換） ----------
 if (!window.TRIAL_QUERY) {
   window.TRIAL_QUERY = {
     oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
@@ -448,7 +490,6 @@ if (!window.TRIAL_QUERY) {
     _default: '"Head+and+Neck+Cancer"'
   };
 }
-// 狭い（specific）クエリ：組織型
 if (!window.TRIAL_QUERY_HISTO) {
   window.TRIAL_QUERY_HISTO = {
     'adenoid-cystic'  : '"adenoid+cystic+carcinoma"',
@@ -459,50 +500,58 @@ if (!window.TRIAL_QUERY_HISTO) {
   };
 }
 
-/* --- 広い（broader）クエリの定義 ----------------------- */
-/* 例：parotid（耳下腺）は「salivary gland（唾液腺）」へ拡張 */
+// ---------- 広げる式（1段上の抽象カテゴリも拾う） ----------
 const BROADEN_SITE_EXPR = {
   salivary: '"salivary+gland+carcinoma"+OR+"salivary+gland+cancer"+OR+parotid+OR+submandibular+OR+sublingual'
 };
-// 組織型を一段拡張（ACC/MEC などは唾液腺関連で広く取る）
 const BROADEN_HISTO_EXPR = {
   'adenoid-cystic'  : '"adenoid+cystic+carcinoma"+AND+("salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual)',
   'mucoepidermoid'  : '"mucoepidermoid+carcinoma"+AND+("salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual)',
   'mucosal-melanoma': '"mucosal+melanoma"+AND+("head+and+neck"+OR+oral+OR+nasal+OR+oropharynx)'
 };
 
-/* --- クエリ式のリストを作成（狭い→広い→デフォルト） --- */
+// ---------- クエリ式の候補を作成（狭い → 同義語 → 広い → デフォルト） ----------
 function buildTrialsExprList({ cancerId=null, histologyId=null } = {}){
   const CQ = window.TRIAL_QUERY || {};
   const HQ = window.TRIAL_QUERY_HISTO || {};
-  const exprs = [];
+  const exprs = new Set();
 
-  if (histologyId && HQ[histologyId]) exprs.push(HQ[histologyId]); // 狭い（組織型）
-  if (cancerId && CQ[cancerId])       exprs.push(CQ[cancerId]);    // 狭い（部位）
+  // 1) 組織型・部位の狭い式
+  if (histologyId && HQ[histologyId]) exprs.add(HQ[histologyId]);
+  if (cancerId && CQ[cancerId])       exprs.add(CQ[cancerId]);
 
-  // 広い（1段上の抽象カテゴリ）
-  if (histologyId && BROADEN_HISTO_EXPR[histologyId]) {
-    exprs.push(BROADEN_HISTO_EXPR[histologyId]);
+  // 2) 英語シノニム（同義語）— OR で束ねた式を追加
+  const syns = [];
+  if (histologyId && EN_SYNONYMS[histologyId]) syns.push(...EN_SYNONYMS[histologyId]);
+  if (cancerId   && EN_SYNONYMS[cancerId])     syns.push(...EN_SYNONYMS[cancerId]);
+  if (syns.length){
+    const orExpr = syns
+      .map(s => `"${encodeURIComponent(String(s).replace(/\s+/g,'+'))}"`)
+      .join('+OR+');
+    exprs.add(orExpr);
   }
-  if (cancerId && BROADEN_SITE_EXPR[cancerId]) {
-    exprs.push(BROADEN_SITE_EXPR[cancerId]);
-  }
 
-  // 最後にデフォルト（頭頸部全体）
-  exprs.push(CQ._default || '"Head+and+Neck+Cancer"');
+  // 3) 一段広い式
+  if (histologyId && BROADEN_HISTO_EXPR[histologyId]) exprs.add(BROADEN_HISTO_EXPR[histologyId]);
+  if (cancerId && BROADEN_SITE_EXPR[cancerId])        exprs.add(BROADEN_SITE_EXPR[cancerId]);
 
-  // 同じ式の重複を削除
-  return Array.from(new Set(exprs));
+  // 4) デフォルト
+  exprs.add(CQ._default || '"Head+and+Neck+Cancer"');
+
+  return Array.from(exprs);
 }
 
-/* --- ClinicalTrials.gov（StudyFields API）を複合実行 --- */
+// ---------- StudyFields API（複数式を叩いて統合） ----------
 async function fetchTrials(params = {}){
   const exprList = buildTrialsExprList(params);
   const fields = [
-    'NCTId','BriefTitle','Condition','OverallStatus',
-    'InterventionName','LeadSponsorName','LocationCountry','LastUpdatePostDate'
+    'NCTId','BriefTitle','Condition','OverallStatus','StudyType','Phase',
+    'InterventionType','InterventionName','LeadSponsorName',
+    'LocationCountry','LocationCity','LocationState','StartDate','PrimaryCompletionDate',
+    'LastUpdatePostDate'
   ].join(',');
-  const maxPerQuery = 10;       // 各式あたり
+
+  const maxPerQuery = 12;
   const all = [];
   for (const expr of exprList){
     const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=${fields}&min_rnk=1&max_rnk=${maxPerQuery}&fmt=json`;
@@ -516,10 +565,17 @@ async function fetchTrials(params = {}){
         title: r.BriefTitle?.[0],
         cond: (r.Condition||[]).join(', '),
         status: r.OverallStatus?.[0],
+        studyType: r.StudyType?.[0],
+        phase: r.Phase?.[0],
         interventions: (r.InterventionName||[]).filter(Boolean),
+        interventionTypes: (r.InterventionType||[]).filter(Boolean),
         sponsor: r.LeadSponsorName?.[0] || '',
-        country: (r.LocationCountry||[]).join(', '),
-        updated: r.LastUpdatePostDate?.[0]
+        countries: (r.LocationCountry||[]).filter(Boolean),
+        city: r.LocationCity?.[0] || '',
+        state: r.LocationState?.[0] || '',
+        start: r.StartDate?.[0] || '',
+        primaryComplete: r.PrimaryCompletionDate?.[0] || '',
+        updated: r.LastUpdatePostDate?.[0] || ''
       });
     });
   }
@@ -533,46 +589,151 @@ async function fetchTrials(params = {}){
     uniq.push(t);
   }
 
-  // 更新日（文字列）で新しい順に（取得できない行は末尾）
-  uniq.sort((a,b) => {
-    const da = Date.parse(a.updated || '') || 0;
-    const db = Date.parse(b.updated || '') || 0;
-    return db - da;
-  });
+  // スコアリング（募集中>英語結果含む>薬剤>日本>Phase 2/3/4>更新が新しい）で並べ替え
+  const score = (t) => {
+    let s = 0;
+    if (/Recruiting|Enrolling|Not\s+yet\s+recruiting/i.test(t.status||'')) s += 50;
+    if ((t.interventionTypes||[]).some(x => /Drug|Biological|Device|Combination Product/i.test(x))) s += 20;
+    if ((t.interventions||[]).length) s += 10;
+    if ((t.countries||[]).some(c => /Japan/i.test(c))) s += 15;           // JP優先
+    if (/Phase\s*(2|3|4)/i.test(t.phase||'')) s += 10;
+    const d = Date.parse(t.updated||t.start||'') || 0;
+    s += Math.min(20, Math.floor((d - 1700000000000)/(1000*60*60*24*30))); // ざっくり新しさボーナス
+    return s;
+  };
+  uniq.sort((a,b) => score(b) - score(a));
 
-  // 上限 20 件に丸め
-  return uniq.slice(0, 20);
+  return uniq.slice(0, 24);
 }
 
-/* --- 失敗/0件時：JP/EN 補助リンク（狭い・広い両方） --- */
+// ---------- UIフィルタ ----------
+window.TRIAL_FILTERS = {
+  recruitingOnly: true,
+  drugOnly: true,
+  japanFirst: true,
+  phaseMin: 'Any' // 'Any' | '1' | '2' | '3' | '4'
+};
+
+function renderTrialsControls(box){
+  if (!box) return;
+  const c = document.createElement('div');
+  c.id = 'trials-controls';
+  c.className = 'meta';
+  c.style.margin = '8px 0 12px';
+  c.innerHTML = `
+    <label style="margin-right:12px;"><input type="checkbox" id="flt-recruit" ${window.TRIAL_FILTERS.recruitingOnly?'checked':''}/> 募集中のみ</label>
+    <label style="margin-right:12px;"><input type="checkbox" id="flt-drug" ${window.TRIAL_FILTERS.drugOnly?'checked':''}/> 薬剤など介入あり</label>
+    <label style="margin-right:12px;"><input type="checkbox" id="flt-jp" ${window.TRIAL_FILTERS.japanFirst?'checked':''}/> 日本を優先</label>
+    <label>フェーズ最小:
+      <select id="flt-phase">
+        <option value="Any">指定なし</option>
+        <option value="1">Phase 1+</option>
+        <option value="2" selected>Phase 2+</option>
+        <option value="3">Phase 3+</option>
+        <option value="4">Phase 4</option>
+      </select>
+    </label>
+  `;
+  box.appendChild(c);
+
+  const $ = (id)=>c.querySelector(id);
+  $('#flt-recruit').addEventListener('change', e => { window.TRIAL_FILTERS.recruitingOnly = e.target.checked; rerenderTrialsList(); });
+  $('#flt-drug').addEventListener('change', e => { window.TRIAL_FILTERS.drugOnly = e.target.checked; rerenderTrialsList(); });
+  $('#flt-jp').addEventListener('change', e => { window.TRIAL_FILTERS.japanFirst = e.target.checked; rerenderTrialsList(); });
+  $('#flt-phase').addEventListener('change', e => { window.TRIAL_FILTERS.phaseMin = e.target.value; rerenderTrialsList(); });
+}
+
+function passFilters(t){
+  const F = window.TRIAL_FILTERS;
+  if (F.recruitingOnly && !/Recruiting|Enrolling|Not\s+yet\s+recruiting/i.test(t.status||'')) return false;
+  if (F.drugOnly && !((t.interventionTypes||[]).some(x => /Drug|Biological|Device|Combination Product/i.test(x)))) return false;
+  const phNum = (t.phase||'').match(/(\d)/)?.[1] || null;
+  if (F.phaseMin !== 'Any' && phNum && Number(phNum) < Number(F.phaseMin)) return false;
+  return true;
+}
+
+let __TRIALS_CACHE = []; // 直近取得を保持してUI再描画に使う
+
+function rerenderTrialsList(){
+  const box = document.getElementById('trials');
+  if (!box) return;
+  const listHost = box.querySelector('#trials-list-host');
+  if (!listHost) return;
+  renderTrialsList(listHost, __TRIALS_CACHE);
+}
+
+function renderTrialsList(host, trials){
+  const F = window.TRIAL_FILTERS;
+  const filtered = trials.filter(passFilters);
+
+  // 日本優先の並べ替え（ONのときだけ）
+  const ordered = F.japanFirst
+    ? filtered.slice().sort((a,b) => {
+        const aj = (a.countries||[]).some(c => /Japan/i.test(c)) ? 1 : 0;
+        const bj = (b.countries||[]).some(c => /Japan/i.test(c)) ? 1 : 0;
+        if (bj !== aj) return bj - aj;
+        const da = Date.parse(a.updated||a.start||'') || 0;
+        const db = Date.parse(b.updated||b.start||'') || 0;
+        return db - da;
+      })
+    : filtered;
+
+  if (!ordered.length){
+    host.innerHTML = `<div class="meta">現在の条件では表示できる治験がありません。</div>`;
+    return;
+  }
+
+  host.innerHTML = `
+    <ul class="list small">
+      ${ordered.map(t => {
+        const drugBadge = (t.interventionTypes||[]).some(x => /Drug|Biological/i.test(x))
+          ? `<span class="badge">Drug</span>` : '';
+        const jpBadge = (t.countries||[]).some(c => /Japan/i.test(c))
+          ? `<span class="badge">JP</span>` : '';
+        const ph = t.phase ? `／ <span class="badge">${escapeHtml(t.phase)}</span>` : '';
+        return `
+        <li>
+          <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener">
+            <strong>${escapeHtml(t.title || t.id)}</strong>
+          </a>
+          <div class="meta">
+            ID: ${t.id} ／ 状況: ${escapeHtml(t.status||'')} ${ph} ／ 更新: ${escapeHtml(t.updated||'')}
+            ${drugBadge} ${jpBadge}
+          </div>
+          ${t.sponsor ? `<div class="meta">主担当機関: ${escapeHtml(t.sponsor)}</div>` : ''}
+          ${t.interventions && t.interventions.length ? `
+            <div class="meta">介入: <strong>${t.interventions.map(escapeHtml).join(' / ')}</strong></div>
+          ` : ''}
+          ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
+        </li>`;
+      }).join('')}
+    </ul>
+  `;
+}
+
+// ---------- 失敗/0件時：狭い・広い 両方の検索リンク ----------
 function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
   const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
   const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
 
-  // 狭いキーワード（JP/EN）
+  const SITE_EN_LABELS = {
+    oral:'oral cavity cancer', oropharynx:'oropharyngeal cancer', hypopharynx:'hypopharyngeal cancer',
+    nasopharynx:'nasopharyngeal carcinoma', larynx:'laryngeal cancer', nasal:'nasal cavity or paranasal sinus cancer',
+    salivary:'salivary gland cancer'
+  };
+
   const narrowJP = histo?.aliases?.[0] || histo?.name || cancer?.name || '頭頸部がん';
   let narrowEN = 'head and neck cancer';
   if (histo) {
     narrowEN = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || narrowEN;
   } else if (cancer) {
-    const SITE_EN_LABELS = {
-      oral: 'oral cavity cancer',
-      oropharynx: 'oropharyngeal cancer',
-      hypopharynx: 'hypopharyngeal cancer',
-      nasopharynx: 'nasopharyngeal carcinoma',
-      larynx: 'laryngeal cancer',
-      nasal: 'nasal cavity or paranasal sinus cancer',
-      salivary: 'salivary gland cancer'
-    };
     narrowEN = SITE_EN_LABELS[cancer.id] || narrowEN;
   }
 
-  // 広いキーワード（JP/EN）— 唾液腺などへ拡張
   let broadJP = '頭頸部がん';
   let broadEN = 'head and neck cancer';
   if (histologyId === 'adenoid-cystic' || histologyId === 'mucoepidermoid' || cancerId === 'salivary') {
-    broadJP = '唾液腺がん';
-    broadEN = 'salivary gland cancer';
+    broadJP = '唾液腺がん'; broadEN = 'salivary gland cancer';
   }
 
   const qJPa = encodeURIComponent(`${narrowJP} 治験`);
@@ -583,55 +744,41 @@ function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
   box.innerHTML = `
     <div class="card">
       <h3>自動検索リンク（補助）</h3>
-      <p class="meta">APIからの取得に失敗/0件のため、狭い検索と広い検索の両方を提示します。</p>
+      <p class="meta">API取得に失敗/0件のため、狭い・広い両方の候補を提示します。</p>
       <ul class="list small">
-        <li><strong>狭い：</strong> <a href="https://www.google.com/search?q=${qJPa}" target="_blank" rel="noopener">Google（日本語）「${escapeHtml(narrowJP)} 治験」</a> ／ <a href="https://www.google.com/search?q=${qENa}" target="_blank" rel="noopener">Google（英語）“${escapeHtml(narrowEN)} clinical trial”</a> ／ <a href="https://clinicaltrials.gov/search?cond=${qENa}" target="_blank" rel="noopener">CT.gov 内検索</a></li>
-        <li><strong>広い：</strong> <a href="https://www.google.com/search?q=${qJPb}" target="_blank" rel="noopener">Google（日本語）「${escapeHtml(broadJP)} 治験」</a> ／ <a href="https://www.google.com/search?q=${qENb}" target="_blank" rel="noopener">Google（英語）“${escapeHtml(broadEN)} clinical trial”</a> ／ <a href="https://clinicaltrials.gov/search?cond=${qENb}" target="_blank" rel="noopener">CT.gov 内検索</a></li>
+        <li><strong>狭い：</strong> <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPa}">Google（日本語）</a> ／ <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENa}">Google（英語）</a> ／ <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENa}">CT.gov 内検索</a></li>
+        <li><strong>広い：</strong> <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPb}">Google（日本語）</a> ／ <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENb}">Google（英語）</a> ／ <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENb}">CT.gov 内検索</a></li>
       </ul>
     </div>
   `;
 }
 
-/* --- 治験描画 --- */
+// ---------- 描画本体 ----------
 async function loadTrials(cancerId, { histologyId=null } = {}){
   const box = document.getElementById('trials');
   if (!box) return;
   box.innerHTML = '<div class="meta">読み込み中…</div>';
+
+  // コントロールを先に設置
+  box.innerHTML = '';
+  renderTrialsControls(box);
+  const host = document.createElement('div');
+  host.id = 'trials-list-host';
+  box.appendChild(host);
+  host.innerHTML = '<div class="meta">読み込み中…</div>';
+
   try {
     const trials = await fetchTrials({ cancerId, histologyId });
+    __TRIALS_CACHE = trials.slice(); // 保持
     if (!trials.length){
       renderTrialsFallback(box, { cancerId, histologyId });
       return;
     }
-    box.innerHTML = `
-      <ul class="list small">
-        ${trials.map(t => `
-          <li>
-            <a href="https://clinicaltrials.gov/study/${t.id}" target="_blank" rel="noopener">
-              <strong>${escapeHtml(t.title || t.id)}</strong>
-            </a>
-            <div class="meta">
-              ID: ${t.id}
-              ${t.status ? ` ／ 状況: ${escapeHtml(t.status)}` : ''}
-              ${t.updated ? ` ／ 更新: ${escapeHtml(t.updated)}` : ''}
-            </div>
-            ${t.sponsor ? `<div class="meta">主担当機関: ${escapeHtml(t.sponsor)}</div>` : ''}
-            ${t.interventions && t.interventions.length ? `
-              <div class="meta">介入（薬剤・手技など）: ${t.interventions.map(escapeHtml).join(' / ')}</div>
-            ` : ''}
-            ${t.cond ? `<div class="meta">対象: ${escapeHtml(t.cond)}</div>` : ''}
-          </li>
-        `).join('')}
-      </ul>`;
+    renderTrialsList(host, trials);
   } catch (e){
     console.error('trials error', e);
     renderTrialsFallback(box, { cancerId, histologyId });
   }
-}
-
-/* ========== ユーティリティ ========== */
-function escapeHtml(s){
-  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 /* =================== 強制ポピュレーター（保険） =================== */
