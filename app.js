@@ -510,3 +510,107 @@ function renderKnowledgeCardsHTML({ cancerId=null, histologyId=null }) {
     </div>
   `;
 }
+/* ====== 知識ベース：信頼できる一次情報リンク & 最新研究クイック検索 ====== */
+const KB = {
+  ncc_ganjoho_headneck: "https://ganjoho.jp/public/cancer/head_neck/",
+  nci_pdq_headneck_patient: "https://www.cancer.gov/types/head-and-neck/patient",
+  nci_pdq_headneck_hcp: "https://www.cancer.gov/types/head-and-neck/hp",
+  cruk_search: (q) => `https://www.cancerresearchuk.org/about-cancer/search?search=${encodeURIComponent(q)}`,
+  nice_search: (q) => `https://www.nice.org.uk/search?q=${encodeURIComponent(q)}`,
+  esmo_search: (q) => `https://www.esmo.org/search?query=${encodeURIComponent(q)}`,
+  asco_cancer_net_search: (q) => `https://www.cancer.net/search?search=${encodeURIComponent(q)}`,
+  pubmed: (q) => `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(q)}`,
+  pubmed_latest_3y_rct: (q) =>
+    `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(q)}&filter=datesearch.y_3&filter=pubt.clinicaltrial&sort=date`,
+  ctgov_search: (q) => `https://clinicaltrials.gov/search?cond=${encodeURIComponent(q)}`,
+  accr_foundation: "https://accrf.org/",
+  rce: "https://www.rarecancerseurope.org/",
+};
+
+function guessEnglishQuery({ cancerId=null, histologyId=null }) {
+  const SITE_EN = {
+    oral: "oral cavity cancer",
+    oropharynx: "oropharyngeal cancer",
+    hypopharynx: "hypopharyngeal cancer",
+    nasopharynx: "nasopharyngeal carcinoma",
+    larynx: "laryngeal cancer",
+    nasal: "paranasal sinus cancer",
+    salivary: "salivary gland cancer",
+  };
+  const HISTO_EN = {
+    "adenoid-cystic": "adenoid cystic carcinoma",
+    "mucoepidermoid": "mucoepidermoid carcinoma",
+    "mucosal-melanoma": "mucosal melanoma",
+    "lymphoma": "head and neck lymphoma",
+    "sarcoma": "head and neck sarcoma",
+  };
+  if (histologyId && cancerId) {
+    return `${HISTO_EN[histologyId] || histologyId} ${SITE_EN[cancerId] || cancerId}`;
+  }
+  return HISTO_EN[histologyId] || SITE_EN[cancerId] || "head and neck cancer";
+}
+
+function buildKnowledgeLinks({ cancerId=null, histologyId=null }) {
+  const q = guessEnglishQuery({ cancerId, histologyId });
+
+  const common = [
+    { title:"がん情報サービス（頭頸部）", url: KB.ncc_ganjoho_headneck, badge:"日本/患者向け" },
+    { title:"NCI PDQ（患者向け）", url: KB.nci_pdq_headneck_patient, badge:"英語/患者向け" },
+    { title:"NCI PDQ（医療者向け）", url: KB.nci_pdq_headneck_hcp, badge:"英語/医療者向け" },
+    { title:"NICE（英国ガイドライン）検索", url: KB.nice_search(q), badge:"英語/医療者向け" },
+    { title:"ESMO（学会ガイドライン）検索", url: KB.esmo_search(q), badge:"英語/医療者向け" },
+    { title:"Cancer Research UK（患者向け）検索", url: KB.cruk_search(q), badge:"英語/患者向け" },
+    { title:"ASCO Cancer.Net（患者向け）検索", url: KB.asco_cancer_net_search(q), badge:"英語/患者向け" },
+  ];
+
+  const extra = [];
+  if (histologyId === "adenoid-cystic") {
+    extra.push({ title:"Adenoid Cystic Carcinoma Research Foundation", url: KB.accr_foundation, badge:"英語/希少がん" });
+  }
+  if (histologyId || cancerId === "salivary") {
+    extra.push({ title:"Rare Cancers Europe", url: KB.rce, badge:"英語/希少がん" });
+  }
+  return [...extra, ...common];
+}
+
+function buildLatestResearchLinks({ cancerId=null, histologyId=null }) {
+  const q = guessEnglishQuery({ cancerId, histologyId });
+  return [
+    { title:"PubMed（直近3年・臨床試験/RCT）", url: KB.pubmed_latest_3y_rct(q) },
+    { title:"PubMed（総合）", url: KB.pubmed(q) },
+    { title:"ClinicalTrials.gov（該当領域の治験）", url: KB.ctgov_search(q) },
+  ];
+}
+
+function renderKnowledgeCardsHTML({ cancerId=null, histologyId=null }) {
+  const eh = (typeof escapeHtml === 'function')
+    ? escapeHtml
+    : (s)=>String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  const links = buildKnowledgeLinks({ cancerId, histologyId });
+  const research = buildLatestResearchLinks({ cancerId, histologyId });
+
+  const linksHTML = links.map(l =>
+    `<li><a href="${l.url}" target="_blank" rel="noopener">${eh(l.title)}</a> ${l.badge?`<span class="badge">${eh(l.badge)}</span>`:''}</li>`
+  ).join('');
+
+  const researchHTML = research.map(l =>
+    `<li><a href="${l.url}" target="_blank" rel="noopener">${eh(l.title)}</a></li>`
+  ).join('');
+
+  return `
+    <div class="card">
+      <h3>根拠とガイドライン</h3>
+      <ul class="list small">
+        ${linksHTML || '<li class="meta">該当リンクは準備中です。</li>'}
+      </ul>
+      <p class="meta">※ 一部サイトは医療者向け・英語です。患者向けページ（PDQ/Cancer.Net/CRUK 等）も併記しています。</p>
+    </div>
+    <div class="card">
+      <h3>最新研究を探す（自動クエリ）</h3>
+      <ul class="list small">
+        ${researchHTML}
+      </ul>
+    </div>
+  `;
+}
