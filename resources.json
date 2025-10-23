@@ -125,11 +125,189 @@
     {"title":"NICE guidelines（英）","url":"https://www.nice.org.uk/search?q=head+and+neck+cancer","source":"NICE","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]}
   ],
   "life": [
-    {"id":"oral-care","title":"放射線治療中の口腔ケア","category":"口腔ケア","body":"軟らかい歯ブラシ・フッ化物含嗽・無アルコールの洗口液。粘膜炎がある場合は医療者の指示に従う。","cancerIds":["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]},
-    {"id":"nutrition","title":"味覚変化と栄養","category":"栄養","body":"味が感じにくい時は温度・食感・香りを工夫。高エネルギーの間食と十分な水分補給。","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]},
-    {"id":"voice","title":"発声の代替と練習","category":"コミュニケーション","body":"アプリや筆談ボード、ジェスチャーの併用。必要に応じてSTと練習メニューを作成。","cancerIds":["larynx"]},
-    {"id":"return-work","title":"仕事・学業への復帰","category":"社会生活","body":"復帰時期や配慮事項を主治医と相談し、会社・学校へ情報提供書を準備。段階的な復職計画を。","cancerIds":["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]}
-  ],
+  {
+    "id": "oral-care-rt",
+    "title": "放射線治療中の口腔ケア基本",
+    "category": "口腔ケア",
+    "body": "やわらかめ歯ブラシ＋フッ化物含嗽。無アルコール洗口液。粘膜炎が強い時はブラッシング圧を最小に。義歯は痛点を避けて短時間使用。",
+    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]
+  },
+  {
+    "id": "mucositis-care",
+    "title": "口内炎（粘膜炎）の痛み対策",
+    "category": "口腔ケア",
+    "body": "冷たい飲食・氷片で鎮痛補助。辛い・酸っぱい・熱いものは回避。医師に局所麻酔含嗽や鎮痛剤を相談。",
+    "cancerIds": ["oral","oropharynx","nasopharynx"]
+  },
+  {
+    "id": "xerostomia",
+    "title": "口腔乾燥（唾液減少）の工夫",
+    "category": "口腔ケア",
+    "body": "人工唾液スプレー・無糖ガム・氷片。寝室の加湿、カフェイン控えめ。う蝕予防に高濃度フッ化物ペーストを。",
+    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","salivary"]
+  },
+  {
+    "id": "taste",
+    "title": "味覚低下と嗅覚の活用",
+    "category": "栄養・食事",
+    "body": "温度・香りで風味を補強（だし・ハーブ・柑橘香）。金属味が強い時はプラ製スプーンや冷食で緩和。",
+    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]
+  },
+  {
+    "id": "dysphagia-st",
+    "title": "嚥下（のみ込み）リハの始め方",
+    "category": "嚥下・発声",
+    "body": "言語聴覚士(ST)に評価依頼。顎・舌・頸部の可動域訓練、嚥下体操、増粘で誤嚥を予防。少量・ゆっくり・複数回飲下。",
+    "cancerIds": ["oropharynx","hypopharynx","larynx","oral"]
+  },
+  {
+    "id": "food-mod",
+    "title": "食形態の調整（誤嚥・むせ予防）",
+    "category": "栄養・食事",
+    "body": "とろみ付与、まとまりやすい食材（卵・豆腐等）から開始。パサつき・二相性（汁＋具）は工夫を。姿勢は軽度頸部屈曲。",
+    "cancerIds": ["oropharynx","hypopharynx","larynx","oral"]
+  },
+  {
+    "id": "voice-prosthesis",
+    "title": "発声の選択肢（喉頭摘出後）",
+    "category": "嚥下・発声",
+    "body": "電気式人工喉頭・食道発声・シャント発声。装置の衛生管理・バルブ交換時期は主治医/業者指導で。",
+    "cancerIds": ["larynx"]
+  },
+  {
+    "id": "trismus",
+    "title": "開口障害（口が開きにくい）",
+    "category": "運動・拘縮",
+    "body": "放射線後や術後は早期から開口訓練（指タテ・スティック）。痛みは“気持ちよい伸張”程度で。温罨法併用可。",
+    "cancerIds": ["oral","oropharynx","nasal","salivary"]
+  },
+  {
+    "id": "neck-fibrosis",
+    "title": "頸部のこわばり・線維化対策",
+    "category": "運動・拘縮",
+    "body": "肩甲帯・頸部ストレッチ、関節可動域訓練を毎日短時間×複数回。重い荷物・長時間同姿勢は控える。",
+    "cancerIds": ["oropharynx","hypopharynx","nasopharynx","larynx"]
+  },
+  {
+    "id": "lymphedema",
+    "title": "顔面・頸部リンパ浮腫へのセルフケア",
+    "category": "むくみ",
+    "body": "スキンケア→軽擦（やさしい撫で）→頸部への誘導。圧迫は医療者の指導下で。感染兆候（発赤・熱感）は受診。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary"]
+  },
+  {
+    "id": "skin-rt",
+    "title": "放射線皮膚炎のスキンケア",
+    "category": "皮膚ケア",
+    "body": "低刺激保湿を毎日。摩擦・日光・熱刺激を避ける。びらん時は指示薬を使用、独自の民間療法は避ける。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]
+  },
+  {
+    "id": "dental",
+    "title": "歯科フォロー（顎骨壊死予防含む）",
+    "category": "歯科",
+    "body": "放射線前後は専門歯科での洗浄・う蝕対策。抜歯はリスク評価が必要。ビスホス/デノスマブ使用中は要相談。",
+    "cancerIds": ["oral","oropharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "nutrition",
+    "title": "体重減少を抑える栄養のコツ",
+    "category": "栄養・食事",
+    "body": "少量高カロリーを回数で。栄養補助飲料・油脂追加・間食。摂れない時は早めにNST/栄養士へ。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","nasal","salivary"]
+  },
+  {
+    "id": "peg-ng",
+    "title": "経腸栄養（NG/PEG）の整備",
+    "category": "栄養・食事",
+    "body": "一時的に経腸栄養で休嚥下しつつリハ。皮膚・固定テープの清潔管理、詰まり防止のフラッシュを習慣に。",
+    "cancerIds": ["oropharynx","hypopharynx","nasopharynx","larynx"]
+  },
+  {
+    "id": "pain",
+    "title": "痛みの段階的コントロール",
+    "category": "痛み",
+    "body": "アセトアミノフェン→NSAIDs→オピオイドの階段、便秘対策を併行。神経障害性痛には補助薬も相談。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "fatigue",
+    "title": "がん関連疲労（CRF）への向き合い方",
+    "category": "全身",
+    "body": "短時間の有酸素＋レジスタンス運動を週数回。睡眠衛生・昼寝は20–30分。甲状腺機能や貧血の評価も。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "mental",
+    "title": "不安・抑うつへのセルフヘルプ",
+    "category": "こころ",
+    "body": "呼吸法・マインドフルネス・ピアサポート。強い持続症状はサイコオンコロジー外来へ。睡眠薬は独断中止しない。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "work",
+    "title": "仕事・学業への復帰準備",
+    "category": "社会・制度",
+    "body": "主治医の就労配慮指示書を活用。段階的復職（短時間勤務）と在宅併用の交渉。声・嚥下の制限は具体的に伝える。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "financial",
+    "title": "公的支援・費用の助成",
+    "category": "社会・制度",
+    "body": "高額療養費・傷病手当金・身体障害者手帳・医療費控除を確認。地域のがん相談支援センターで個別相談を。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "caregiver",
+    "title": "家族・介護者の負担軽減",
+    "category": "家族",
+    "body": "役割を分担し“休む日”を作る。短時間レスパイト・訪問看護・地域包括支援を活用。情報共有ノートを1冊に。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"]
+  },
+  {
+    "id": "stoma-care",
+    "title": "気管孔（ストーマ）の日常管理",
+    "category": "呼吸・ストーマ",
+    "body": "加湿（HMEフィルタ等）と痰の湿性化。シャワー時はカバー。吸引器具の衛生保持、出血や異臭は早期相談。",
+    "cancerIds": ["larynx"]
+  },
+  {
+    "id": "shoulder",
+    "title": "副神経障害に伴う肩の痛み・挙上制限",
+    "category": "運動・拘縮",
+    "body": "早期からの肩甲帯安定化訓練と可動域維持。作業療法で日常生活の代償動作を学ぶ。",
+    "cancerIds": ["oral","oropharynx","hypopharynx","nasopharynx","salivary"]
+  },
+  {
+    "id": "smell",
+    "title": "嗅覚低下の“匂い訓練”",
+    "category": "感覚",
+    "body": "バラ・ユーカリ・レモン・クローブ等の香りを1日2回、数カ月継続。安全の範囲で実施。",
+    "cancerIds": ["nasal","nasopharynx","oral","oropharynx"]
+  },
+  {
+    "id": "sun",
+    "title": "皮膚移植部・瘢痕部の紫外線対策",
+    "category": "皮膚ケア",
+    "body": "SPF30+の日焼け止め・帽子・スカーフ。色素沈着や瘢痕肥厚の悪化を防ぐ。屋外作業は時間帯を調整。",
+    "cancerIds": ["oral","nasal","salivary","larynx"]
+  },
+  {
+    "id": "speech-aids",
+    "title": "構音の工夫（舌・口底切除後）",
+    "category": "嚥下・発声",
+    "body": "簡潔な語彙・ゆっくり話す・相手の理解を確認。キーボード/スマホ音声合成も併用。",
+    "cancerIds": ["oral"]
+  },
+  {
+    "id": "oral-bleeding",
+    "title": "口腔の出血・潰瘍時のセルフケア",
+    "category": "口腔ケア",
+    "body": "氷で冷却・清潔ガーゼで優しく圧迫。止血困難・広範な潰瘍は受診。抗凝固薬中は自己判断で中止しない。",
+    "cancerIds": ["oral","oropharynx","salivary"]
+  }
+]
   "histologies": [
     {
       "id": "adenoid-cystic",
