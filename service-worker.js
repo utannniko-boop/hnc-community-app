@@ -1,100 +1,126 @@
-/* =========================================================
-   HNC Community PWA - Service Worker (safe SWR pattern)
-   - 「Response body is already used」を回避
-   - GET のみキャッシュ対象
-   - 同一オリジンの静的アセットはプリキャッシュ
-   ========================================================= */
+// service-worker.js — High Performance (Navigation Preload 有効)
+// -------------------------------------------------------------
 
-const VERSION = 'v8'; // ← 数字を上げると更新が確実
-const STATIC_CACHE = `static-${VERSION}`;
+// ⚠ 必ずバージョンを上げてデプロイ（キャッシュ破棄のため）
+const CACHE_VER  = 'v5';
+const CACHE_NAME = `hnc-pwa-${CACHE_VER}`;
 
-// ルート配下のパスを想定（GitHub Pages でサブパスなら調整）
-const ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './manifest.json',
-  './resources.json',
-  './icon.png',
-  './supabase-client.js',
+// クリティカルアセット（初回表示に必要な最小限）
+const PRECACHE = [
+  '/',                     // ルート
+  '/index.html',           // HTML
+  '/style.css?v=31',       // CSS（バージョンはあなたの値に合わせて）
+  '/app.js?v=31',          // JS（同上）
+  '/manifest.json',        // PWA
+  '/icon.png',             // アイコン
 ];
 
-// ---- install: プリキャッシュ ----
+// 外部APIなど「キャッシュしない(or 短期)」URL判定
+const isBypassCache = (url) => {
+  const u = new URL(url, self.location.origin);
+  // 1) クロスオリジンの治験APIは常にネット優先（opaque増殖を防ぐ）
+  if (u.hostname !== self.location.hostname) return true;
+  // 2) 任意に追加（例：/api/ など）
+  // if (u.pathname.startsWith('/api/')) return true;
+  return false;
+};
+
+// -------------------------------------------------------------
+// Install: コアファイルを先読み（Precache）
+// -------------------------------------------------------------
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(PRECACHE);
+  })());
+  self.skipWaiting();
 });
 
-// ---- activate: 古いキャッシュ削除 ＋ navigation preload ----
+// -------------------------------------------------------------
+// Activate: 古いキャッシュ削除 + Navigation Preload 有効化
+// -------------------------------------------------------------
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    // 古いバージョンのキャッシュを掃除
     const keys = await caches.keys();
     await Promise.all(
-      keys.map((key) => (key !== STATIC_CACHE ? caches.delete(key) : Promise.resolve()))
+      keys.map((k) => (k !== CACHE_NAME) ? caches.delete(k) : Promise.resolve())
     );
 
-    // Navigation Preload（対応ブラウザのみ）
-    if ('navigationPreload' in self.registration) {
-      try { await self.registration.navigationPreload.enable(); } catch (_) {}
+    // Navigation Preload を有効化（重要）
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable();
     }
-    self.clients.claim();
+    await self.clients.claim();
   })());
 });
 
-// ---- fetch: stale-while-revalidate（安全な clone の仕方）----
+// -------------------------------------------------------------
+// Fetch: 高速初期表示のための戦略
+//  - Document: preloadResponse → network → cache → /index.html
+//  - 静的アセット(CSS/JS/画像): Stale-While-Revalidate
+//  - 外部APIなどはネット直行（bypass）
+// -------------------------------------------------------------
 self.addEventListener('fetch', (event) => {
-  const req = event.request;
+  const { request } = event;
 
-  // 非GET・chrome-extension等はスルー
-  if (req.method !== 'GET' || req.url.startsWith('chrome-extension://')) return;
+  // 1) Navigation / Document
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith((async () => {
+      try {
+        // A. Preload（ブラウザが並列で取りにいったもの）を**必ず await**
+        const preload = await event.preloadResponse;
+        if (preload) return preload;
 
-  // API 等の別オリジンは network-first（キャッシュ汚染を避ける）
-  const sameOrigin = new URL(req.url).origin === self.location.origin;
+        // B. ネットワーク（最速）
+        const net = await fetch(request);
+        // HTML は都度変わる可能性もあるため、ここではキャッシュに保存しない
+        return net;
+      } catch (err) {
+        // C. オフライン時はキャッシュ or SPA fallback
+        const cached = await caches.match(request);
+        return cached || caches.match('/index.html');
+      }
+    })());
+    return;
+  }
 
+  // 2) 外部API や bypass 対象はネット直行（キャッシュしない）
+  if (isBypassCache(request.url)) {
+    event.respondWith((async () => {
+      try {
+        return await fetch(request);
+      } catch (err) {
+        // API はフォールバックなし（必要ならここでダミー応答を作る）
+        return new Response('', { status: 504, statusText: 'Gateway Timeout' });
+      }
+    })());
+    return;
+  }
+
+  // 3) 静的リソース（CSS/JS/画像等）は「Stale-While-Revalidate」
   event.respondWith((async () => {
-    const cache = await caches.open(STATIC_CACHE);
-
-    // 1) まずキャッシュ（同一オリジンの静的）を探す
-    const cached = await cache.match(req);
-    // 2) ネットワークから最新を取得（取得できたらキャッシュ更新）
-    const networkPromise = fetch(req, { cache: 'no-store' })
-      .then(async (netRes) => {
-        // ここで netRes は一度しか使えないので、put 用に clone を作る
-        // ただしエラー応答はキャッシュしない。opaque はOK（CDNなどで発生）
-        try {
-          const cacheable = netRes.ok || netRes.type === 'opaque';
-          if (cacheable && sameOrigin) {
-            await cache.put(req, netRes.clone());
-          }
-        } catch (e) {
-          // put 失敗は無視（quota等）
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(request);
+    const fetchAndUpdate = fetch(request)
+      .then((res) => {
+        // 応答が有効ならキャッシュ更新
+        if (res && (res.status === 200 || res.type === 'opaqueredirect' || res.type === 'basic')) {
+          cache.put(request, res.clone());
         }
-        return netRes; // これはそのまま返却（ここでは clone しない）
+        return res;
       })
-      .catch(() => undefined); // オフライン等
+      .catch(() => cached); // ネット失敗時は手元のキャッシュを返す
 
-    // 3) 返すものの優先順位
-    //    - 同一オリジン: キャッシュがあれば先に返す（SWR）
-    //    - 異オリジン: ネット成功なら返す、だめなら（同一オリジンなら）キャッシュ
-    if (sameOrigin) {
-      return cached || (await networkPromise) || offlineFallback(req);
-    } else {
-      return (await networkPromise) || cached || offlineFallback(req);
-    }
+    // 手元にあれば即返して体感を速く、その裏で更新
+    return cached || fetchAndUpdate;
   })());
 });
 
-// ---- ナビゲーション時の簡易フォールバック（任意）----
-function offlineFallback(req) {
-  // HTML ナビゲーションなら簡易メッセージを返す
-  if (req.mode === 'navigate') {
-    return new Response(
-      '<!doctype html><meta charset="utf-8"><title>Offline</title><h1>オフラインです</h1><p>ネットワーク接続を確認して再読み込みしてください。</p>',
-      { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
-    );
+// -------------------------------------------------------------
+// オプション：メッセージ経由で手動アップデート（任意）
+// -------------------------------------------------------------
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
-  return new Response('', { status: 503 });
-}
+});
