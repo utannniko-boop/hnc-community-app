@@ -103,3 +103,34 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById(tab).classList.add('active');
   });
 });
+
+// ---- コミュニティタブ初期化処理 ----
+function initCommunity() {
+  const container = document.getElementById('community');
+  const list = document.getElementById('community-list');
+  if (!container || !list) return;
+
+  // がん一覧を生成
+  list.innerHTML = DATA.cancers.map(c => `
+    <li>
+      <strong>${c.name}</strong>
+      <div style="margin-top:6px;">
+        <a href="#" data-jump="treatments" data-cancer="${c.id}">治療情報を見る</a>　
+        <a href="#" data-jump="life" data-cancer="${c.id}">生活の工夫を見る</a>
+      </div>
+    </li>
+  `).join('');
+
+  // クリック時にタブ切り替え
+  list.addEventListener('click', e => {
+    const a = e.target.closest('a[data-jump]');
+    if (!a) return;
+    e.preventDefault();
+    const tab = a.dataset.jump;
+    const id = a.dataset.cancer;
+    document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+    document.getElementById(tab).classList.add('active');
+    if (tab === 'treatments') filterTreatments(id);
+    if (tab === 'life') filterLife(id);
+  });
+}
