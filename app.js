@@ -1,4 +1,4 @@
-/* app.js v37 — 組織型(ACC/MEC等)対応 + 日本語→英語クエリ拡張 + 安定タブ */
+/* app.js v38 — ホーム統合検索の実表示・コミュニティ連動 */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ====== タブ切替 ====== */
@@ -10,29 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     history.replaceState(null,'', '#'+tabId);
   }
   tabs.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.tab)));
-  if (!location.hash) activateTab('home'); else activateTab(location.hash.replace('#',''));
+  activateTab((location.hash || '#home').replace('#',''));
 
-  /* ====== 日本語→英語クエリ辞書（部位・組織型 共通） ====== */
-  const JP2EN = {
-    // 部位
-    '口腔がん':'oral cavity cancer','口腔癌':'oral cavity cancer','舌がん':'tongue cancer','舌癌':'tongue cancer',
-    '口底がん':'floor of mouth cancer','歯肉がん':'gingival cancer','頬粘膜がん':'buccal mucosa cancer','硬口蓋がん':'hard palate cancer',
-    '中咽頭がん':'oropharyngeal cancer','扁桃':'tonsil cancer','舌根がん':'base of tongue cancer','軟口蓋がん':'soft palate cancer',
-    '下咽頭がん':'hypopharyngeal cancer','梨状陥凹':'pyriform sinus','輪状後部':'postcricoid',
-    '上咽頭がん':'nasopharyngeal carcinoma','上咽頭癌':'nasopharyngeal carcinoma','NPC':'nasopharyngeal carcinoma',
-    '喉頭がん':'laryngeal cancer','喉頭癌':'laryngeal cancer','声門がん':'glottic cancer','声門上がん':'supraglottic cancer','声門下がん':'subglottic cancer',
-    '鼻腔がん':'nasal cavity cancer','副鼻腔がん':'paranasal sinus cancer','上顎洞がん':'maxillary sinus cancer','篩骨洞がん':'ethmoid sinus cancer','前頭洞がん':'frontal sinus cancer','蝶形骨洞がん':'sphenoid sinus cancer',
-    '唾液腺がん':'salivary gland cancer','耳下腺がん':'parotid gland cancer','顎下腺がん':'submandibular gland cancer','舌下腺がん':'sublingual gland cancer',
-    // 組織型
-    '腺様嚢胞癌':'adenoid cystic carcinoma','腺様のう胞がん':'adenoid cystic carcinoma','ACC':'adenoid cystic carcinoma',
-    '粘表皮癌':'mucoepidermoid carcinoma','MEC':'mucoepidermoid carcinoma',
-    '粘膜悪性黒色腫':'mucosal melanoma','悪性黒色腫（粘膜）':'mucosal melanoma','粘膜メラノーマ':'mucosal melanoma',
-    'リンパ腫':'lymphoma','悪性リンパ腫':'lymphoma',
-    '肉腫':'sarcoma','横紋筋肉腫':'rhabdomyosarcoma','線維肉腫':'fibrosarcoma','骨肉腫':'osteosarcoma'
-  };
-  const norm = s => (s||'').toString().toLowerCase().normalize('NFKC').replace(/[ \u3000]/g,'');
-
-  /* ====== カタログ：部位（CANCERS） ====== */
+  /* ====== データ（部位 / 組織型） ====== */
   const CANCERS = [
     { id:'oral',        name:'口腔がん（舌・口底など）', en:'oral cavity cancer', syn:['tongue cancer','floor of mouth','gingival','buccal mucosa','hard palate'], icd:'C00-C06' },
     { id:'oropharynx',  name:'中咽頭がん',               en:'oropharyngeal cancer', syn:['tonsil cancer','base of tongue','soft palate'], icd:'C10' },
@@ -42,19 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     { id:'nasal',       name:'鼻・副鼻腔がん',           en:'nasal cavity or paranasal sinus cancer', syn:['maxillary sinus','ethmoid sinus','frontal sinus','sphenoid sinus'], icd:'C30-C31' },
     { id:'salivary',    name:'唾液腺がん',               en:'salivary gland cancer', syn:['parotid gland cancer','submandibular gland cancer','sublingual gland cancer'], icd:'C07-C08' }
   ];
-  const cancerMap = Object.fromEntries(CANCERS.map(c=>[c.id,c]));
-
-  /* ====== カタログ：組織型（HISTOS） ====== */
   const HISTOS = [
-    { id:'adenoid-cystic',  name:'腺様嚢胞癌（ACC）',              en:'adenoid cystic carcinoma', syn:['ACC','adenoid-cystic carcinoma'], siteIds:['salivary','nasal','oral'] },
-    { id:'mucoepidermoid',  name:'粘表皮癌（MEC）',                en:'mucoepidermoid carcinoma', syn:['MEC'], siteIds:['salivary','nasal','oral','oropharynx'] },
-    { id:'mucosal-melanoma',name:'悪性黒色腫（粘膜）',             en:'mucosal melanoma', syn:['mucosal malignant melanoma'], siteIds:['nasal','oral','oropharynx'] },
-    { id:'lymphoma',        name:'リンパ腫',                        en:'lymphoma', syn:['extranodal lymphoma','head and neck lymphoma'], siteIds:['oropharynx','nasopharynx'] },
-    { id:'sarcoma',         name:'肉腫',                            en:'sarcoma', syn:['rhabdomyosarcoma','fibrosarcoma','osteosarcoma'], siteIds:['oral','nasal','oropharynx'] }
+    { id:'adenoid-cystic',  name:'腺様嚢胞癌（ACC）',      en:'adenoid cystic carcinoma', syn:['ACC','adenoid-cystic carcinoma'], siteIds:['salivary','nasal','oral'] },
+    { id:'mucoepidermoid',  name:'粘表皮癌（MEC）',        en:'mucoepidermoid carcinoma', syn:['MEC'], siteIds:['salivary','nasal','oral','oropharynx'] },
+    { id:'mucosal-melanoma',name:'悪性黒色腫（粘膜）',     en:'mucosal melanoma', syn:['mucosal malignant melanoma'], siteIds:['nasal','oral','oropharynx'] },
+    { id:'lymphoma',        name:'リンパ腫',               en:'lymphoma', syn:['extranodal lymphoma','head and neck lymphoma'], siteIds:['oropharynx','nasopharynx'] },
+    { id:'sarcoma',         name:'肉腫',                   en:'sarcoma', syn:['rhabdomyosarcoma','fibrosarcoma','osteosarcoma'], siteIds:['oral','nasal','oropharynx'] }
   ];
-  const histoMap = Object.fromEntries(HISTOS.map(h=>[h.id,h]));
+  const cancerMap = Object.fromEntries(CANCERS.map(c=>[c.id,c]));
+  const histoMap  = Object.fromEntries(HISTOS.map(h=>[h.id,h]));
 
-  /* ====== コミュニティ：セレクタ ====== */
+  /* ====== コミュニティ セレクタ初期化 ====== */
   const selSite = document.getElementById('community-select');
   const selHisto = document.getElementById('histology-select');
   const content = document.getElementById('community-content');
@@ -63,15 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const trialsHost = document.getElementById('trials-list-host');
   const trialsControls = document.getElementById('trials-controls');
 
-  selSite.innerHTML = `<option value="">（部位を選択）</option>` + CANCERS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  selHisto.innerHTML = `<option value="">（組織型を選択：任意）</option>` + HISTOS.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+  if (selSite && selHisto){
+    selSite.innerHTML = `<option value="">（部位を選択）</option>` + CANCERS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    selHisto.innerHTML = `<option value="">（組織型を選択：任意）</option>` + HISTOS.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+  }
 
   let currentCancer = null;
   let currentHisto = null;
 
-  selSite.addEventListener('change', async () => {
+  selSite?.addEventListener('change', async () => {
     currentCancer = cancerMap[selSite.value] || null;
-    // 部位を選んだら、組織型セレクタをその部位に関連する候補に絞り込む
+    // 部位を選んだら組織型候補を絞り込む
     const options = ['<option value="">（組織型を選択：任意）</option>']
       .concat(HISTOS.filter(h => !currentCancer ? true : (h.siteIds||[]).includes(currentCancer.id))
       .map(h=>`<option value="${h.id}">${h.name}</option>`));
@@ -85,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadTrials();
   });
 
-  selHisto.addEventListener('change', async () => {
+  selHisto?.addEventListener('change', async () => {
     currentHisto = histoMap[selHisto.value] || null;
     renderCommunityHeader();
     renderEvidenceLinks();
@@ -94,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function renderCommunityHeader(){
+    if(!content) return;
     if(!currentCancer && !currentHisto){
       content.innerHTML = '<p class="meta">部位を選択（＋必要に応じて組織型）してください。</p>'; return;
     }
@@ -119,15 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  /* ====== 根拠とガイドライン（部位＋組織型で自動リンク） ====== */
-  function qEnc(str){ return encodeURIComponent(str||''); }
+  /* ====== 根拠リンク / 研究リンク ====== */
+  function qEnc(s){ return encodeURIComponent(s||''); }
   function currentENLabel(){
-    // 優先：組織型 > 部位
     if (currentHisto) return currentHisto.en;
     if (currentCancer) return currentCancer.en;
     return 'head and neck cancer';
-    }
+  }
   function renderEvidenceLinks(){
+    if(!evidenceUL) return;
     evidenceUL.innerHTML = '';
     const base = currentENLabel();
     const items = [
@@ -136,17 +117,26 @@ document.addEventListener('DOMContentLoaded', () => {
       ['NCI PDQ：医療者向け',        `https://www.cancer.gov/search/results?swKeyword=${qEnc(base)}&filter=health-professional`],
       ['NICE（UK）',                  `https://www.nice.org.uk/search?q=${qEnc(base)}`],
       ['ESMO ガイドライン',          `https://www.esmo.org/guidelines?q=${qEnc(base)}`],
-      ['CRUK（Cancer Research UK）',  `https://www.cancerresearchuk.org/about-cancer/search?q=${qEnc(base)}`],
+      ['CRUK（UK）',                  `https://www.cancerresearchuk.org/about-cancer/search?q=${qEnc(base)}`],
       ['ASCO',                        `https://www.asco.org/search?query=${qEnc(base)}`],
     ];
     evidenceUL.innerHTML = items.map(([t,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${t}</a></li>`).join('');
   }
-
-  /* ====== 最新研究リンク（PubMed / CT.gov：部位＋組織型で強化） ====== */
+  function buildExprTerms(){
+    const parts = [];
+    if (currentCancer) { parts.push(currentCancer.en, ...(currentCancer.syn||[])); }
+    if (currentHisto)  { parts.push(currentHisto.en,  ...(currentHisto.syn||[])); }
+    if (!parts.length) parts.push('head and neck cancer');
+    const encoded = parts
+      .filter(Boolean)
+      .map(s => `"${encodeURIComponent(String(s).replace(/\s+/g,'+'))}"`)
+      .join('+OR+');
+    return { pmBase: encoded, ctBase: encoded };
+  }
   function renderResearchLinks(){
+    if(!researchUL) return;
     researchUL.innerHTML = '';
-    const terms = buildExprTerms(); // URLエンコード済みの OR 連結
-    // PubMed は「直近3年」＋ RCT / Clinical Trial の絞り込み
+    const terms = buildExprTerms();
     const pmBase = `(${terms.pmBase})`;
     const pmRCT   = `https://pubmed.ncbi.nlm.nih.gov/?term=${pmBase}&filter=datesearch.y_3&filter=pubt.randomizedcontrolledtrial`;
     const pmTrial = `https://pubmed.ncbi.nlm.nih.gov/?term=${pmBase}&filter=datesearch.y_3&filter=pubt.clinicaltrial`;
@@ -158,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ].join('');
   }
 
-  /* ====== ClinicalTrials.gov — 取得・表示 ====== */
+  /* ====== ClinicalTrials.gov ====== */
   const TRIAL_FILTERS = { recruitingOnly:true, drugOnly:true, japanFirst:true, phaseMin:'2' };
   function ensureTrialControls(){
     if (!trialsControls) return;
@@ -190,8 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
   function rerenderTrials(){
-    const host = trialsHost;
-    if (!host) return;
+    if (!trialsHost) return;
     const filtered = trialsCache.filter(passFilters);
     const ordered = TRIAL_FILTERS.japanFirst
       ? filtered.slice().sort((a,b)=>{
@@ -204,10 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       : filtered;
     if (!ordered.length){
-      host.innerHTML = `<div class="meta">現在の条件では表示できる治験がありません。</div>`;
+      trialsHost.innerHTML = `<div class="meta">現在の条件では表示できる治験がありません。</div>`;
       return;
     }
-    host.innerHTML = `
+    trialsHost.innerHTML = `
       <ul class="list small">
         ${ordered.map(t=>{
           const drug = (t.interventionTypes||[]).some(x=>/Drug|Biological/i.test(x))?'<span class="badge">Drug</span>':'';
@@ -225,26 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
       </ul>
     `;
   }
-
-  function buildExprTerms(){
-    // PubMed / CT.gov 共用：部位＋組織型の英語キーワードを OR で束ねる
-    const parts = [];
-    if (currentCancer) { parts.push(currentCancer.en, ...(currentCancer.syn||[])); }
-    if (currentHisto)  { parts.push(currentHisto.en,  ...(currentHisto.syn||[])); }
-    if (!parts.length) parts.push('head and neck cancer');
-    // URLエンコード＋引用で囲んで OR
-    const encoded = parts
-      .filter(Boolean)
-      .map(s => `"${encodeURIComponent(String(s).replace(/\s+/g,'+'))}"`)
-      .join('+OR+');
-    return {
-      pmBase: encoded, // そのまま PubMed に渡す
-      ctBase: encoded  // そのまま CT.gov 検索に渡す
-    };
-  }
-
   async function loadTrials(){
     ensureTrialControls();
+    if (!trialsHost) return;
     trialsHost.innerHTML = '<div class="meta">読み込み中…</div>';
     const terms = buildExprTerms().ctBase;
     const fields = [
@@ -258,7 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) throw new Error(String(res.status));
       const json = await res.json();
       const rows = json?.StudyFieldsResponse?.StudyFields || [];
-      const all = rows.map(r=>({
+      const seen=new Set();
+      trialsCache = rows.map(r=>({
         id: r.NCTId?.[0],
         title: r.BriefTitle?.[0],
         cond: (r.Condition||[]).join(', '),
@@ -274,9 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         start: r.StartDate?.[0] || '',
         primaryComplete: r.PrimaryCompletionDate?.[0] || '',
         updated: r.LastUpdatePostDate?.[0] || ''
-      }));
-      const seen=new Set();
-      trialsCache = all.filter(t=>t.id && !seen.has(t.id) && seen.add(t.id));
+      })).filter(t=>t.id && !seen.has(t.id) && seen.add(t.id));
       rerenderTrials();
     }catch(e){
       trialsCache = [];
@@ -291,19 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
   }
-
-  /* ====== 治療情報の固定リンク ====== */
-  const treat = document.getElementById('treatment-links');
-  const baseLinks = [
-    ['国立がん研究センター がん情報サービス','https://ganjoho.jp'],
-    ['NCI PDQ（患者向け）','https://www.cancer.gov/publications/pdq'],
-    ['NCI PDQ（医療者向け）','https://www.cancer.gov/publications/pdq?Audience=HealthProfessional'],
-    ['NICE（UK）','https://www.nice.org.uk/guidance/conditions-and-diseases/cancer'],
-    ['ESMO（欧州腫瘍学会）','https://www.esmo.org/guidelines'],
-    ['CRUK（Cancer Research UK）','https://www.cancerresearchuk.org/about-cancer'],
-    ['ASCO（米国臨床腫瘍学会）','https://www.asco.org/']
-  ];
-  treat.innerHTML = baseLinks.map(([t,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${t}</a></li>`).join('');
 
   /* ====== 生活の工夫 ====== */
   const lifeData = {
@@ -337,52 +295,67 @@ document.addEventListener('DOMContentLoaded', () => {
     lifeContent.innerHTML = tips.length ? `<ul class="list">${tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>` : '<p class="meta">準備中です。</p>';
   }
   lifeButtons.forEach(b=>b.addEventListener('click',()=>showLife(b.dataset.life)));
-  showLife('surgery'); // 既定表示
+  showLife('surgery');
 
-  /* ====== ホーム：統合検索（日本語→英語変換＆直接ジャンプ） ====== */
+  /* ====== ホーム：統合検索（実表示） ====== */
   const gInput = document.getElementById('global-search');
   const gRes = document.getElementById('global-results');
-  gInput.addEventListener('input',(e)=>{
-    const qRaw = e.target.value.trim();
-    if(!qRaw){ gRes.innerHTML=''; return; }
-    const q = norm(qRaw);
+  const norm = s => (s||'').toString().toLowerCase().normalize('NFKC');
 
-    // 1) 部位ヒット
-    const siteHits = CANCERS.filter(c => [c.name,c.en,...(c.syn||[])]
-      .join(' ').toLowerCase().includes(q));
-    // 2) 組織型ヒット
-    const histoHits = HISTOS.filter(h => [h.name,h.en,...(h.syn||[])]
-      .join(' ').toLowerCase().includes(q));
-    // 3) 日本語→英語辞書ヒット（補助）
-    const dictEN = Object.entries(JP2EN).find(([jp]) => norm(jp) === q)?.[1];
+  gInput?.addEventListener('input',(e)=>{
+    const q = norm(e.target.value.trim());
+    gRes.innerHTML = '';
+    if(!q) return;
+
+    // 部位ヒット
+    const siteHits = CANCERS.filter(c => [c.name,c.en,...(c.syn||[]),c.icd||''].join(' ').toLowerCase().includes(q));
+    // 組織型ヒット
+    const histoHits = HISTOS.filter(h => [h.name,h.en,...(h.syn||[])].join(' ').toLowerCase().includes(q));
 
     const rows = [];
     siteHits.forEach(c => {
-      rows.push(`<li><strong>部位：</strong>${esc(c.name)} ／ <a href="#community" data-goto-site="${c.id}">コミュニティへ</a></li>`);
+      rows.push(`
+        <li>
+          <strong>部位：</strong>${esc(c.name)} <span class="badge">${c.icd}</span>
+          <div class="meta">${esc(c.en)} / 同義語: ${esc((c.syn||[]).join(', '))}</div>
+          <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+            <a href="#community" data-goto-site="${c.id}">コミュニティへ</a>
+            <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${encodeURIComponent(`"${c.en.replace(/\s+/g,'+')}"`)}">CT.gov</a>
+            <a target="_blank" rel="noopener" href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(`"${c.en.replace(/\s+/g,'+')}"`)}&filter=datesearch.y_3&filter=pubt.clinicaltrial">PubMed</a>
+          </div>
+        </li>`);
     });
     histoHits.forEach(h => {
-      rows.push(`<li><strong>組織型：</strong>${esc(h.name)} ／ <a href="#community" data-goto-histo="${h.id}">この組織型で治験/論文</a></li>`);
+      // サイト別ボタン
+      const siteBtns = (h.siteIds||[]).map(id=>{
+        const s = cancerMap[id];
+        return s ? `<a href="#community" data-goto-site="${s.id}" data-goto-histo="${h.id}">${esc(s.name)}で表示</a>` : '';
+      }).join(' ');
+      rows.push(`
+        <li>
+          <strong>組織型：</strong>${esc(h.name)}
+          <div class="meta">${esc(h.en)} / 同義語: ${esc((h.syn||[]).join(', '))}</div>
+          <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+            ${siteBtns || `<a href="#community" data-goto-histo="${h.id}">コミュニティへ</a>`}
+            <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${encodeURIComponent(`"${h.en.replace(/\s+/g,'+')}"`)}">CT.gov</a>
+            <a target="_blank" rel="noopener" href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(`"${h.en.replace(/\s+/g,'+')}"`)}&filter=datesearch.y_3&filter=pubt.clinicaltrial">PubMed</a>
+          </div>
+        </li>`);
     });
-    if (dictEN){
-      const pm = `https://pubmed.ncbi.nlm.nih.gov/?term="${encodeURIComponent(dictEN.replace(/\s+/g,'+'))}"&filter=datesearch.y_3&filter=pubt.clinicaltrial`;
-      const ct = `https://clinicaltrials.gov/search?cond="${encodeURIComponent(dictEN.replace(/\s+/g,'+'))}"`;
-      rows.push(`<li class="meta">日本語→英語：<strong>${esc(dictEN)}</strong> ／ <a href="${pm}" target="_blank" rel="noopener">PubMed</a> ／ <a href="${ct}" target="_blank" rel="noopener">CT.gov</a></li>`);
-    }
+
     gRes.innerHTML = rows.length ? rows.join('') : `<li class="meta">候補が見つかりません。</li>`;
   });
 
-  // 検索結果からのジャンプ
+  // 検索結果からコミュニティへ連動
   document.addEventListener('click',(e)=>{
-    const a1=e.target.closest('a[data-goto-site]'); 
-    const a2=e.target.closest('a[data-goto-histo]');
-    if (!a1 && !a2) return;
+    const a = e.target.closest('a[data-goto-site], a[data-goto-histo]');
+    if (!a) return;
     e.preventDefault();
     activateTab('community');
-    if (a1){
-      selSite.value=a1.dataset.gotoSite; selSite.dispatchEvent(new Event('change'));
-    } else if (a2){
-      selHisto.value=a2.dataset.gotoHisto; selHisto.dispatchEvent(new Event('change'));
-    }
+    const site = a.getAttribute('data-goto-site');
+    const hist = a.getAttribute('data-goto-histo');
+    if (site && selSite){ selSite.value = site; selSite.dispatchEvent(new Event('change')); }
+    if (hist && selHisto){ selHisto.value = hist; selHisto.dispatchEvent(new Event('change')); }
   });
 
   /* ====== util ====== */
