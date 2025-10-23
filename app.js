@@ -208,6 +208,7 @@ function selectCancer(id){
 function renderCommunityContent(cancerId){
   const wrap = document.getElementById('community-content');
   if(!wrap) return;
+
   const arr = Array.isArray(DATA?.cancers) ? DATA.cancers : [];
   const cancer = arr.find(c => c.id === cancerId);
   if(!cancer){
@@ -215,29 +216,67 @@ function renderCommunityContent(cancerId){
     return;
   }
 
-  const aliases = (cancer.aliases||[]).join('・');
-  const topics = (cancer.topics||[]).map(t => `
-    <li><strong>${t.title}</strong><div class="meta">${t.desc||''}</div></li>
+  // topics の1件ごとに、クリックで詳細を開閉（urlがあれば新規タブで開く）
+  const topicsHTML = (cancer.topics||[]).map((t, i) => `
+    <li class="topic-item" data-index="${i}">
+      <button class="topic-toggle" type="button">
+        <strong>${t.title}</strong>
+        ${t.url ? '<span class="meta">（クリックで外部サイト）</span>' : ''}
+      </button>
+      <div class="topic-body" style="display:none;margin-top:6px;">
+        ${t.desc ? `<div class="meta">${t.desc}</div>` : ''}
+        ${t.url ? `<div style="margin-top:6px;"><a class="linklike" href="${t.url}" target="_blank" rel="noopener">リンクを開く</a></div>` : ''}
+      </div>
+    </li>
   `).join('') || '<li>トピックは準備中です。</li>';
 
-  const links = (cancer.links||[]).map(l => `
+  const linksHTML = (cancer.links||[]).map(l => `
     <li><a href="${l.url}" target="_blank" rel="noopener">${l.title||l.url}</a></li>
   `).join('') || '<li>関連リンクは準備中です。</li>';
+
+  const aliases = (cancer.aliases||[]).join('・');
 
   wrap.innerHTML = `
     <div class="card">
       <h3>${cancer.name} <span class="badge">${cancer.icd||''}</span></h3>
       ${aliases ? `<div class="meta">別名：${aliases}</div>` : ''}
     </div>
+
     <div class="card">
       <h3>話題・トピック</h3>
-      <ul class="list small">${topics}</ul>
+      <ul id="community-topics" class="list small">${topicsHTML}</ul>
     </div>
+
     <div class="card">
       <h3>関連リンク</h3>
-      <ul class="list small">${links}</ul>
+      <ul class="list small">${linksHTML}</ul>
     </div>
   `;
+
+  // ---- クリック挙動を付与（イベント委譲）----
+  const topicsList = document.getElementById('community-topics');
+  if (topicsList) {
+    topicsList.addEventListener('click', (e) => {
+      const btn = e.target.closest('.topic-toggle');
+      if (!btn) return;
+
+      // url がある場合は外部リンク優先（新規タブ）
+      const li = btn.closest('.topic-item');
+      const idx = Number(li?.dataset.index ?? -1);
+      const topic = (cancer.topics || [])[idx];
+
+      if (topic?.url) {
+        window.open(topic.url, '_blank', 'noopener');
+        return;
+      }
+
+      // url がなければ開閉
+      const body = li.querySelector('.topic-body');
+      if (!body) return;
+      const visible = body.style.display !== 'none';
+      body.style.display = visible ? 'none' : 'block';
+    });
+  }
 
   // 連動描画（任意）
   try { filterTreatments(cancerId); } catch(e){}
