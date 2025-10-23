@@ -332,19 +332,25 @@ function renderBookmarks(){
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
 
-/* =================== ClinicalTrials.gov 連携（※ここだけに統一） =================== */
-const TRIAL_QUERY = {
-  oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
-  oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
-  hypopharynx: 'hypopharyngeal+OR+postcricoid+OR+"pyriform+sinus"',
-  nasopharynx: 'nasopharyngeal+OR+NPC',
-  larynx: 'laryngeal+OR+glottic+OR+supraglottic+OR+subglottic',
-  nasal: '"nasal+cavity"+OR+"paranasal+sinus"+OR+"maxillary+sinus"',
-  salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
-  _default: '"Head+and+Neck+Cancer"'
-};
+/* =================== ClinicalTrials.gov 連携（再定義に強い版） =================== */
+// ここは「const」を使わず、グローバルに1回だけ注入する
+if (!window.TRIAL_QUERY) {
+  window.TRIAL_QUERY = {
+    oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
+    oropharynx: 'oropharyngeal+OR+"base+of+tongue"+OR+tonsil',
+    hypopharynx: 'hypopharyngeal+OR+postcricoid+OR+"pyriform+sinus"',
+    nasopharynx: 'nasopharyngeal+OR+NPC',
+    larynx: 'laryngeal+OR+glottic+OR+supraglottic+OR+subglottic',
+    nasal: '"nasal+cavity"+OR+"paranasal+sinus"+OR+"maxillary+sinus"',
+    salivary: '"salivary+gland"+OR+parotid+OR+submandibular+OR+sublingual',
+    _default: '"Head+and+Neck+Cancer"'
+  };
+}
+
+// ClinicalTrials.gov v1 StudyFields API（上位10件）
 async function fetchTrialsByCancerId(cancerId){
-  const expr = TRIAL_QUERY[cancerId] || TRIAL_QUERY._default;
+  const Q = window.TRIAL_QUERY || {};
+  const expr = Q[cancerId] || Q._default || '"Head+and+Neck+Cancer"';
   const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
@@ -359,6 +365,7 @@ async function fetchTrialsByCancerId(cancerId){
     updated: r.LastUpdatePostDate?.[0]
   }));
 }
+
 async function loadTrials(cancerId){
   const box = document.getElementById('trials');
   if (!box) return;
