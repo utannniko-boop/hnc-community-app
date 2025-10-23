@@ -5,15 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>頭頸部がんコミュニティ</title>
 
-  <!-- PWA 基本 -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#2563eb" />
+  <meta name="theme-color" content="#f3b7c5" />
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
 
-  <!-- キャッシュ破壊用のバージョンを付与（必要に応じて数値を上げる） -->
-  <link rel="stylesheet" href="style.css?v=28" />
-
+  <!-- キャッシュ破壊は適宜更新 -->
+  <link rel="stylesheet" href="style.css?v=31" />
   <meta name="description" content="頭頸部がんの種類別コミュニティ、治療の最新情報、生活の工夫を集約した無料PWAアプリ" />
 </head>
 <body>
@@ -31,28 +29,45 @@
     </nav>
   </header>
 
+  <!-- ヒーロー帯（花びらアニメ） -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h2>春の桜テーマでやさしく。</h2>
+      <p class="meta">匿名で安心。部位でも組織型でも、治験や生活の工夫まで一つの場所で。</p>
+    </div>
+    <div class="petal-field" id="petals"></div>
+  </section>
+
   <main class="container">
-    <!-- 初期表示は home を active に -->
     <section id="home" class="tab active">
-      <div class="card highlight">
-        <h2>ようこそ</h2>
-        <p>頭頸部がんに関する情報と経験を<strong>安全に・匿名で</strong>シェアするための、無料コミュニティ型Webアプリです（オフライン対応）。</p>
-        <p class="disclaimer">⚠ 医療情報の正確性には配慮していますが、<strong>医師の診断・治療に代わるものではありません</strong>。気になる症状・治療方針は必ず主治医にご相談ください。</p>
+      <div class="grid-2">
+        <div class="card highlight">
+          <h2>ようこそ</h2>
+          <p>頭頸部がんに関する情報と経験を<strong>安全に・匿名で</strong>シェアするための、無料コミュニティ型Webアプリです（オフライン対応）。</p>
+          <p class="disclaimer">⚠ 医療情報の正確性には配慮していますが、<strong>医師の診断・治療に代わるものではありません</strong>。気になる症状・治療方針は必ず主治医にご相談ください。</p>
+        </div>
+
+        <!-- 統合検索 -->
+        <div class="card">
+          <h3>🔎 統合検索（部位・組織型・治験・生活）</h3>
+          <input id="global-search" placeholder="例：耳下腺癌 / 腺様嚢胞癌 / C32 / oropharyngeal ..." />
+          <ul id="global-results" class="list"></ul>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>がんの種類で探す（部位別）</h3>
-        <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん、耳下腺癌、C32…" />
-        <ul id="cancer-list" class="list"></ul>
-      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>がんの種類で探す（部位）</h3>
+          <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん、耳下腺癌、C32…" />
+          <ul id="cancer-list" class="list"></ul>
+        </div>
 
-      <!-- ▼ 追加：組織型で探す -->
-      <div class="card">
-        <h3>組織型で探す</h3>
-        <input id="histo-search" placeholder="例：腺様嚢胞癌、粘表皮癌、悪性黒色腫…" />
-        <ul id="histo-list" class="list"></ul>
+        <div class="card">
+          <h3>組織型で探す（histology）</h3>
+          <input id="histo-search" placeholder="例：腺様嚢胞癌 / 粘表皮癌 / メラノーマ…" />
+          <ul id="histo-list" class="list"></ul>
+        </div>
       </div>
-      <!-- ▲ 追加ここまで -->
 
       <div class="card">
         <h3>ブックマーク</h3>
@@ -70,8 +85,8 @@
       </div>
 
       <div class="card">
-        <h3>最新の治験・研究（ClinicalTrials.gov から自動取得）</h3>
-        <p class="meta">※英語サイトです。治療方針は必ず主治医にご相談ください。</p>
+        <h3>最新の治験・研究</h3>
+        <p class="meta">ClinicalTrials.gov の自動取得に加え、失敗時はJP/ENの横断検索リンクを提示します。</p>
         <div id="trials"></div>
       </div>
 
@@ -123,7 +138,7 @@
       </div>
     </section>
 
-    <!-- 管理（起動時 active にしない） -->
+    <!-- 管理 -->
     <section id="admin" class="tab">
       <div class="card">
         <h2>モデレーター管理</h2>
@@ -151,30 +166,57 @@
     <small>&copy; 2025 HNC Community PWA • MIT License</small>
   </footer>
 
-  <!-- Supabase ライブラリ（未設定なら無害） -->
+  <!-- モバイル底ナビ -->
+  <nav class="bottom-nav">
+    <button class="tab-btn" data-tab="home">ホーム</button>
+    <button class="tab-btn" data-tab="community">コミュニティ</button>
+    <button class="tab-btn" data-tab="treatments">治療</button>
+    <button class="tab-btn" data-tab="life">生活</button>
+  </nav>
+
+  <!-- Supabase（未設定なら無害） -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- あなたのsupabase接続設定（必要なら中でURL/Anonキーを設定） -->
   <script type="module" src="supabase-client.js"></script>
 
-  <!-- Service Worker 登録（相対パス） -->
+  <!-- SW 登録 -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js');
     }
   </script>
 
-  <!-- 念のため：初回アクセス時は #home に誘導 -->
+  <!-- 初回は #home へ -->
   <script>
     (function(){
       try {
-        if (!location.hash || location.hash === '#admin') {
-          location.hash = '#home';
-        }
+        if (!location.hash || location.hash === '#admin') location.hash = '#home';
       } catch (e) {}
     })();
   </script>
 
-  <!-- アプリ本体（※1回だけ読み込む！ バージョン文字でキャッシュ破壊） -->
-  <script src="./app.js?v=29"></script>
+  <!-- アプリ本体（バージョンでキャッシュ破壊） -->
+  <script src="./app.js?v=31"></script>
+
+  <!-- 花びら生成（軽量JS / CSSアニメ駆動） -->
+  <script>
+    (function makePetals(){
+      const field = document.getElementById('petals'); if(!field) return;
+      const N = 24; // 花びら数（適宜）
+      for(let i=0; i<N; i++){
+        const s = document.createElement('span');
+        s.className = 'petal';
+        const x = Math.random()*100 + 'vw';
+        const wind = (Math.random() * 60 - 20) + 'vw';
+        const delay = (Math.random()*-12) + 's';
+        const dur = (8 + Math.random()*8) + 's';
+        s.style.left = x;
+        s.style.setProperty('--x', x);
+        s.style.setProperty('--wind', wind);
+        s.style.animationDelay = delay;
+        s.style.setProperty('--dur', dur);
+        field.appendChild(s);
+      }
+    })();
+  </script>
 </body>
 </html>
