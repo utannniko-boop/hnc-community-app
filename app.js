@@ -1,9 +1,9 @@
 /* =========================================================
-   HNC Community PWA - app.js (全置換用・改善版)
-   - TRIAL_QUERY の重複定義を解消（windowガード）
-   - topics クリックで開閉／URLあれば外部リンク
-   - resources.json 未読でも FALLBACK で動作
-   - 「組織型で探す」を追加（initHistology）
+   HNC Community PWA - app.js（全置換）
+   - 部位検索＋組織型検索（histology）
+   - 組織型から ClinicalTrials.gov を連動表示
+   - TRIAL_QUERY の重複定義をガード
+   - resources.json が無くても FALLBACK で動く
    ========================================================= */
 
 /* =================== グローバル状態 =================== */
@@ -30,7 +30,7 @@ const DATA_FALLBACK = {
   life: [
     {id:"oral-care",title:"放射線治療中の口腔ケア",category:"口腔ケア",body:"軟らかい歯ブラシ・フッ化物含嗽・無アルコールの洗口液。",cancerIds:["oral","oropharynx","nasopharynx","larynx","nasal","salivary"]}
   ],
-  /* ▼ 追加：組織型（FALLBACK） */
+  // ▼ 組織型（histology）FALLBACK
   histologies: [
     {
       id:"adenoid-cystic",
@@ -63,10 +63,12 @@ const DATA_FALLBACK = {
       siteIds:["oral","nasal","oropharynx"]
     }
   ]
-  /* ▲ 追加ここまで */
 };
 
 let DATA = { cancers: [], treatments: [], life: [], histologies: [] };
+
+// 組織型→治験の一時文脈（ボタンで渡す）
+window.HISTO_CONTEXT = null;
 
 /* =================== 起動 =================== */
 if (document.readyState === 'loading') {
@@ -76,8 +78,8 @@ if (document.readyState === 'loading') {
 }
 
 async function boot(){
-  await loadData();         // データ取得（失敗時は FALLBACK）
-  initAll();                // 各UI初期化
+  await loadData();     // データ取得（失敗時は FALLBACK）
+  initAll();            // 各UI初期化
   // ハッシュで #community に来たら確実に初期化
   window.addEventListener('hashchange', () => {
     if (location.hash === '#community') ensureCommunityReady();
@@ -93,7 +95,6 @@ async function loadData(){
       const json = await res.json();
       if (json && Array.isArray(json.cancers) && json.cancers.length){
         DATA = { ...json };
-        // histologies が無ければ FALLBACK から補う
         if (!Array.isArray(DATA.histologies)) {
           DATA.histologies = DATA_FALLBACK.histologies;
         }
@@ -113,7 +114,7 @@ async function loadData(){
 function initAll(){
   try { initTabs(); } catch(e){ console.warn('initTabs err', e); }
   try { initHome(); } catch(e){ console.warn('initHome err', e); }
-  try { initHistology(); } catch(e){ console.warn('initHistology err', e); } // 追加
+  try { initHistology(); } catch(e){ console.warn('initHistology err', e); }
   try { initCommunity(); } catch(e){ console.warn('initCommunity err', e); }
   try { initTreatments(); } catch(e){ console.warn('initTreatments err', e); }
   try { initLife(); } catch(e){ console.warn('initLife err', e); }
@@ -247,7 +248,8 @@ function initHistology(){
       const siteButtons = (h.siteIds || []).map(id => {
         const site = (DATA.cancers || []).find(c => c.id === id) || (DATA_FALLBACK.cancers || []).find(c => c.id === id);
         if (!site) return '';
-        return `<button class="tab-btn linklike" data-jump="community" data-cancer="${site.id}">${site.name}</button>`;
+        // histologyId を data 属性に付与（後で治験に渡す）
+        return `<button class="tab-btn linklike" data-jump="community" data-cancer="${site.id}" data-histology="${h.id}">${site.name}</button>`;
       }).join(' ');
 
       const li = document.createElement('li');
@@ -264,11 +266,12 @@ function initHistology(){
   input.addEventListener('compositionend', e => render(e.target.value));
   render('');
 
-  // リスト内ボタンでコミュニティへジャンプ
+  // リスト内ボタンでコミュニティへジャンプ（組織型文脈をセット）
   list.addEventListener('click', e => {
     const b = e.target.closest('button[data-jump][data-cancer]');
     if(!b) return;
     e.preventDefault();
+    window.HISTO_CONTEXT = b.dataset.histology || null;  // ← ここでセット
     switchTab(b.dataset.jump);
     selectCancer(b.dataset.cancer);
   });
@@ -316,7 +319,7 @@ function selectCancer(id){
   sel.dispatchEvent(new Event('change'));
 }
 
-function renderCommunityContent(cancerId){
+async function renderCommunityContent(cancerId){
   const wrap = document.getElementById('community-content');
   if(!wrap) return;
 
@@ -392,7 +395,14 @@ function renderCommunityContent(cancerId){
   // 連動描画
   try { filterTreatments(cancerId); } catch(e){}
   try { filterLife(cancerId); } catch(e){}
-  try { loadTrials(cancerId); } catch(e){}
+
+  // ← 組織型コンテキストがあれば優先して治験を取得（使い捨て）
+  try {
+    const histo = window.HISTO_CONTEXT || null;
+    await loadTrials(cancerId, { histologyId: histo });
+    window.HISTO_CONTEXT = null;
+  } catch(e) {}
+
   try { loadPosts(cancerId); } catch(e){}
 }
 
@@ -443,8 +453,8 @@ function renderBookmarks(){
   ul.innerHTML = '<li class="meta">ブックマークは準備中です。</li>';
 }
 
-/* =================== ClinicalTrials.gov 連携（再定義に強い版） =================== */
-// ここは「const」を使わず、グローバルに1回だけ注入する
+/* ========== ClinicalTrials.gov 連携（部位用・組織型用） ========== */
+// 部位用クエリ（重複定義を避けるため window ガード）
 if (!window.TRIAL_QUERY) {
   window.TRIAL_QUERY = {
     oral: 'oral+OR+"tongue+cancer"+OR+"floor+of+mouth"',
@@ -457,13 +467,31 @@ if (!window.TRIAL_QUERY) {
     _default: '"Head+and+Neck+Cancer"'
   };
 }
+// 組織型用クエリ（新設）
+if (!window.TRIAL_QUERY_HISTO) {
+  window.TRIAL_QUERY_HISTO = {
+    'adenoid-cystic'  : '"adenoid+cystic+carcinoma"',
+    'mucoepidermoid'  : '"mucoepidermoid+carcinoma"',
+    'mucosal-melanoma': '"mucosal+melanoma"+OR+"malignant+melanoma+of+mucosa"',
+    'lymphoma'        : '"head+and+neck"+lymphoma',
+    'sarcoma'         : '"head+and+neck"+sarcoma'
+  };
+}
+
+// クエリ式を構成
+function buildTrialsExpr({ cancerId=null, histologyId=null } = {}){
+  const CQ = window.TRIAL_QUERY || {};
+  const HQ = window.TRIAL_QUERY_HISTO || {};
+  if (histologyId && HQ[histologyId]) return HQ[histologyId];                    // ① 組織型優先
+  if (cancerId && CQ[cancerId])       return CQ[cancerId];                        // ② 部位
+  return (CQ._default || '"Head+and+Neck+Cancer"');                               // ③ デフォルト
+}
 
 // ClinicalTrials.gov v1 StudyFields API（上位10件）
-async function fetchTrialsByCancerId(cancerId){
-  const Q = window.TRIAL_QUERY || {};
-  const expr = Q[cancerId] || Q._default || '"Head+and+Neck+Cancer"';
-  const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
-  const res = await fetch(url, { cache: 'no-store' });
+async function fetchTrials(params = {}){
+  const expr = buildTrialsExpr(params);
+  const url  = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=NCTId,BriefTitle,Condition,OverallStatus,LocationCountry,LastUpdatePostDate&min_rnk=1&max_rnk=10&fmt=json`;
+  const res  = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`trials fetch failed: ${res.status}`);
   const json = await res.json();
   const rows = json?.StudyFieldsResponse?.StudyFields || [];
@@ -477,12 +505,12 @@ async function fetchTrialsByCancerId(cancerId){
   }));
 }
 
-async function loadTrials(cancerId){
+async function loadTrials(cancerId, { histologyId=null } = {}){
   const box = document.getElementById('trials');
   if (!box) return;
   box.innerHTML = '<div class="meta">読み込み中…</div>';
   try {
-    const trials = await fetchTrialsByCancerId(cancerId);
+    const trials = await fetchTrials({ cancerId, histologyId });
     if (!trials.length){
       box.innerHTML = '<div class="meta">該当する治験が見つかりませんでした。</div>';
       return;
@@ -525,7 +553,7 @@ function escapeHtml(s){
       ? DATA.cancers
       : FALLBACK;
     return arr;
-    }
+  }
 
   function populateOnce(){
     const sel = document.getElementById('community-select');
