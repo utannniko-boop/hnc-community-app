@@ -39,11 +39,21 @@
         <p>頭頸部がんに関する情報と経験を<strong>安全に・匿名で</strong>シェアするための、無料コミュニティ型Webアプリです（オフライン対応）。</p>
         <p class="disclaimer">⚠ 医療情報の正確性には配慮していますが、<strong>医師の診断・治療に代わるものではありません</strong>。気になる症状・治療方針は必ず主治医にご相談ください。</p>
       </div>
+
       <div class="card">
-        <h3>がんの種類で探す</h3>
+        <h3>がんの種類で探す（部位別）</h3>
         <input id="cancer-search" placeholder="例：喉頭がん、上咽頭がん、耳下腺癌、C32…" />
         <ul id="cancer-list" class="list"></ul>
       </div>
+
+      <!-- ▼ 追加：組織型で探す -->
+      <div class="card">
+        <h3>組織型で探す</h3>
+        <input id="histo-search" placeholder="例：腺様嚢胞癌、粘表皮癌、悪性黒色腫…" />
+        <ul id="histo-list" class="list"></ul>
+      </div>
+      <!-- ▲ 追加ここまで -->
+
       <div class="card">
         <h3>ブックマーク</h3>
         <ul id="bookmarks" class="list small"></ul>
@@ -165,6 +175,6 @@
   </script>
 
   <!-- アプリ本体（※1回だけ読み込む！ バージョン文字でキャッシュ破壊） -->
-  <script src="./app.js?v=26"></script>
+  <script src="./app.js?v=29"></script>
 </body>
 </html>
