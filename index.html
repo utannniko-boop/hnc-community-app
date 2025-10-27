@@ -137,13 +137,14 @@
     <section id="life" class="tab">
       <div class="card">
         <h2>生活の工夫・QOL</h2>
-        <div class="life-tabs">
-          <button class="life-tab-btn" data-life="surgery">手術</button>
-          <button class="life-tab-btn" data-life="radiation">放射線治療</button>
-          <button class="life-tab-btn" data-life="chemo">抗がん剤治療</button>
-          <button class="life-tab-btn" data-life="other">その他</button>
-        </div>
-        <div id="life-content"></div>
+       <!-- 置換対象：#life セクション内の life-tabs の部分だけ -->
+<div class="life-tabs">
+  <button type="button" class="life-tab-btn tab-btn" data-life="surgery">手術</button>
+  <button type="button" class="life-tab-btn tab-btn" data-life="radiation">放射線治療</button>
+  <button type="button" class="life-tab-btn tab-btn" data-life="chemo">抗がん剤治療</button>
+  <button type="button" class="life-tab-btn tab-btn" data-life="other">その他</button>
+</div>
+<div id="life-content"></div>
       </div>
     </section>
 
