@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="./icon.png" />
 
   <!-- 外部CSS -->
-  <link id="main-css" rel="stylesheet" href="./style.css?v=36" />
+  <link id="main-css" rel="stylesheet" href="./style.css?v=37" />
 
   <!-- フォールバック最小CSS -->
   <style>
@@ -225,10 +225,10 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="./supabase-client.js"></script>
 
-  <!-- Service Worker（v=36 で確実更新） -->
+  <!-- Service Worker（v=37 で確実更新） -->
   <script>
     if ('serviceWorker' in navigator && !location.search.includes('no-sw=1')) {
-      navigator.serviceWorker.register('./service-worker.js?v=36');
+      navigator.serviceWorker.register('./service-worker.js?v=37');
     }
   </script>
 
@@ -238,7 +238,7 @@
   </script>
 
   <!-- アプリ本体 -->
-  <script src="./app.js?v=36"></script>
+  <script src="./app.js?v=37"></script>
 
   <!-- 花びら（軽量JS） -->
   <script>
