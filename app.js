@@ -404,37 +404,34 @@ function renderTreatmentsList(filterId){
 }
 function filterTreatments(id){ renderTreatmentsList(id); }
 
-/* =================== 生活の工夫（4分類タブ） =================== */
-// ここだけ全置換してください
+// ========== 生活の工夫（サブタブ切替） ==========
 function initLife(){
   const tabsRoot = document.querySelector('.life-tabs');
   const content  = document.getElementById('life-content');
   if (!tabsRoot || !content) return;
 
-  // イベント委任で確実に拾う
+  // サブタブ押下でカテゴリ描画
   tabsRoot.addEventListener('click', (e)=>{
     const btn = e.target.closest('.life-tab-btn'); 
     if (!btn) return;
-    // active切替
     tabsRoot.querySelectorAll('.life-tab-btn').forEach(x=>x.classList.remove('active'));
     btn.classList.add('active');
-    // 描画
-    renderLifeList(btn.dataset.life);
+    renderLifeByCategory(btn.dataset.life);   // ← ここでカテゴリ描画
   });
 
-  // 初期選択（最初のボタン）
+  // 初期表示（最初のボタン）
   const first = tabsRoot.querySelector('.life-tab-btn');
-  if (first) { 
+  if (first) {
     first.classList.add('active');
-    renderLifeList(first.dataset.life);
+    renderLifeByCategory(first.dataset.life);
   }
 
-  // メインタブが life になった時に再描画（SPで戻ってきた時など）
+  // Lifeタブに戻ってきた時も再描画（SP戻る対策）
   window.addEventListener('hashchange', ()=>{
     const tab = (location.hash || '#').slice(1);
     if (tab === 'life') {
       const current = tabsRoot.querySelector('.life-tab-btn.active') || tabsRoot.querySelector('.life-tab-btn');
-      if (current) renderLifeList(current.dataset.life);
+      if (current) renderLifeByCategory(current.dataset.life);
     }
   });
 }
@@ -752,3 +749,75 @@ function buildPubmedLinks({ histologyId=null } = {}){
 
 /* =================== ユーティリティ =================== */
 function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ========== 生活の工夫：カテゴリ別レンダラ（新規） ========== */
+function renderLifeByCategory(key){
+  const host = document.getElementById('life-content');
+  if (!host) return;
+
+  // データ存在確認
+  const arr = Array.isArray(DATA?.life) ? DATA.life : [];
+  if (!arr.length){
+    host.innerHTML = '<div class="meta">生活の工夫データが読み込めていません。</div>';
+    return;
+  }
+
+  // 1) ルール：明示 group があれば最優先。なければキーワード分類
+  const RULES = {
+    surgery: [
+      /手術|術後|摘出|切除|再建|形成|縫合|瘢痕|移植|ストーマ|気管孔|喉頭摘出|trismus|肩|副神経|voice|prosthesis|speech|stoma/i
+    ],
+    radiation: [
+      /放射線|照射|RT|放射線皮膚炎|放射線性|粘膜炎|口内炎|唾液|乾燥|口腔乾燥|味覚|開口障害|歯科|う蝕|osteoradionecrosis|ORNj?/i
+    ],
+    chemo: [
+      /抗がん剤|化学療法|化学放射線|シスプラチン|パクリタキセル|カルボプラチン|分子標的|免疫療法|悪心|嘔吐|しびれ|末梢神経|骨髄抑制|好中球|感染対策|栄養補助|口内炎/i
+    ],
+    other: [
+      /リンパ浮腫|浮腫|スキンケア|紫外線|QOL|疲労|CRF|不安|抑うつ|睡眠|就労|学業|社会|制度|家族|介護|金銭|費用|公的支援|メンタル|嗅覚|匂い訓練/i
+    ]
+  };
+
+  function classify(item){
+    // まず group 属性があればそれを採用
+    const g = (item.group || item.categoryGroup || '').toLowerCase();
+    if (g === 'surgery' || g === 'radiation' || g === 'chemo' || g === 'other') return g;
+
+    // 無ければキーワード判定（title / body / id / category）
+    const text = [
+      item.title || '', item.body || '', item.id || '', item.category || ''
+    ].join(' / ');
+    for (const k of ['surgery','radiation','chemo','other']){
+      if (RULES[k].some(re => re.test(text))) return k;
+    }
+    // どれにも当たらなければ other
+    return 'other';
+  }
+
+  // 2) フィルタリング
+  const picked = arr.filter(x => classify(x) === key);
+
+  // 3) 無ければ案内
+  if (!picked.length){
+    host.innerHTML = `
+      <div class="card">
+        <h3>項目がまだありません</h3>
+        <p class="meta">このカテゴリに該当するヒントが未登録です。別のタブをお試しください。</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 4) 描画
+  host.innerHTML = `
+    <ul class="list">
+      ${picked.map(x => `
+        <li>
+          <strong>${escapeHtml(x.title||'（無題）')}</strong>
+          <div class="meta">${escapeHtml(x.category || '')}${x.group ? ` ／ ${escapeHtml(x.group)}` : ''}</div>
+          <div>${escapeHtml(x.body || '')}</div>
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
