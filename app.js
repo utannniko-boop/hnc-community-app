@@ -821,3 +821,114 @@ function renderLifeByCategory(key){
     </ul>
   `;
 }
+
+/* =========================================================
+   生活の工夫：小タブ切替パッチ（追記だけでOK）
+   - 既存の app.js に依存せず動く安全な差し込み
+   - #life セクション内の [data-life-tab] をクリックで切替
+   - DATA.life が既存のフォーマットでもキーワードで自動分類
+   ========================================================= */
+
+/** 小タブの初期化（1回だけ実行） */
+(function initLifeSubtabsOnce(){
+  if (window.__hnc_life_inited__) return;
+  window.__hnc_life_inited__ = true;
+
+  // イベント委譲：#life 内の data-life-tab ボタンを拾う
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#life [data-life-tab]');
+    if (!btn) return;
+    e.preventDefault();
+    const key = btn.getAttribute('data-life-tab'); // 'surgery' | 'radiation' | 'chemo' | 'other'
+    // アクティブ見た目
+    document.querySelectorAll('#life [data-life-tab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // 表示更新
+    renderLifeByCategory(key);
+  });
+
+  // 「生活」メインタブに入ったらデフォルト表示（手術）にする
+  function ensureDefaultLife() {
+    const lifeTabShown = document.getElementById('life')?.classList.contains('active');
+    if (!lifeTabShown) return;
+    const activeBtn = document.querySelector('#life [data-life-tab].active');
+    const firstBtn  = document.querySelector('#life [data-life-tab]');
+    const key = (activeBtn || firstBtn)?.getAttribute('data-life-tab') || 'surgery';
+    if (!activeBtn && firstBtn) firstBtn.classList.add('active');
+    renderLifeByCategory(key);
+  }
+
+  // 初回＆ハッシュ遷移時に反映
+  document.addEventListener('DOMContentLoaded', ensureDefaultLife);
+  window.addEventListener('hashchange', ensureDefaultLife);
+  // SPA で switchTab を使っている場合にも保険
+  setTimeout(ensureDefaultLife, 0);
+})();
+
+/** 生活ヒントの“治療法別”自動分類（既存データで動く） */
+function lifeModalityOf(item){
+  const text = `${item.title||''} ${item.category||''} ${item.body||''} ${item.id||''}`.toLowerCase();
+
+  // --- 手術（術後・創部・構音/嚥下・ストーマ etc.）
+  if (/[術後|創部|縫合|皮弁|移植|瘢痕|開口障害| trismus |構音|発声|喉頭摘|ストーマ|気管孔|stoma|laryngectomy|prosthesis]/i.test(text)) {
+    return 'surgery';
+  }
+
+  // --- 放射線（口内炎・皮膚炎・唾液/味覚・線維化・開口障害など）
+  if (/[放射線|照射|粘膜炎|口内炎|口腔乾燥|唾液|味覚|線維化|fibrosis|放射線皮膚炎|trismus]/i.test(text)) {
+    return 'radiation';
+  }
+
+  // --- 抗がん剤/免疫（シスプラチン・ドセタキセル・パクリ・免疫チェックポイント等）
+  if (/[抗がん剤|化学療法|シスプラチン|ドセタキセル|パクリタキセル|カルボプラチン|フルオロウラシル|免疫療法|チェックポイント|IO|PD-1|PDL1|ニボルマブ|ペムブロリズマブ]/i.test(text)) {
+    return 'chemo';
+  }
+
+  // --- その他（栄養/PEG・痛み・疲労・メンタル・社会支援 など）
+  return 'other';
+}
+
+/** 指定カテゴリで #life-tips を描画 */
+function renderLifeByCategory(key){
+  const host = document.getElementById('life-tips');
+  if (!host) return;
+
+  const src = (window.DATA && Array.isArray(window.DATA.life) && window.DATA.life.length)
+    ? window.DATA.life
+    : (Array.isArray((window.DATA_FALLBACK||{}).life) ? window.DATA_FALLBACK.life : []);
+
+  if (!src || !src.length){
+    host.innerHTML = `<div class="meta">生活ヒントのデータが見つかりません。</div>`;
+    return;
+  }
+
+  // 指定カテゴリにマッチするもの
+  const items = src.filter(x => lifeModalityOf(x) === key);
+
+  if (!items.length){
+    const label = ({surgery:'手術', radiation:'放射線治療', chemo:'抗がん剤治療', other:'その他の治療'})[key] || 'このカテゴリ';
+    host.innerHTML = `<div class="meta">${label} に該当する項目がまだありません。</div>`;
+    return;
+  }
+
+  // ソート例：カテゴリ→タイトル
+  items.sort((a,b)=> String(a.category||'').localeCompare(String(b.category||'')) || String(a.title||'').localeCompare(String(b.title||'')));
+
+  host.innerHTML = `
+    <ul class="list small">
+      ${items.map(x => `
+        <li>
+          <strong>${escapeHtml(x.title||'（無題）')}</strong>
+          ${x.category ? ` <span class="badge">${escapeHtml(x.category)}</span>` : ''}
+          ${x.cancerIds && x.cancerIds.length ? `<div class="meta">対象：${x.cancerIds.map(escapeHtml).join(' / ')}</div>` : ''}
+          ${x.body ? `<div>${escapeHtml(x.body)}</div>` : ''}
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+// 既存の escapeHtml が無い環境でも動くように保険
+function escapeHtml(s){ 
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
