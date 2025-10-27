@@ -405,16 +405,38 @@ function renderTreatmentsList(filterId){
 function filterTreatments(id){ renderTreatmentsList(id); }
 
 /* =================== 生活の工夫（4分類タブ） =================== */
+// ここだけ全置換してください
 function initLife(){
-  const tabs = document.querySelectorAll('.life-tab-btn');
-  const first = tabs[0]; tabs.forEach(b=>{
-    b.addEventListener('click', ()=>{
-      tabs.forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      renderLifeList(b.dataset.life);
-    });
+  const tabsRoot = document.querySelector('.life-tabs');
+  const content  = document.getElementById('life-content');
+  if (!tabsRoot || !content) return;
+
+  // イベント委任で確実に拾う
+  tabsRoot.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.life-tab-btn'); 
+    if (!btn) return;
+    // active切替
+    tabsRoot.querySelectorAll('.life-tab-btn').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    // 描画
+    renderLifeList(btn.dataset.life);
   });
-  if (first){ first.classList.add('active'); renderLifeList(first.dataset.life); }
+
+  // 初期選択（最初のボタン）
+  const first = tabsRoot.querySelector('.life-tab-btn');
+  if (first) { 
+    first.classList.add('active');
+    renderLifeList(first.dataset.life);
+  }
+
+  // メインタブが life になった時に再描画（SPで戻ってきた時など）
+  window.addEventListener('hashchange', ()=>{
+    const tab = (location.hash || '#').slice(1);
+    if (tab === 'life') {
+      const current = tabsRoot.querySelector('.life-tab-btn.active') || tabsRoot.querySelector('.life-tab-btn');
+      if (current) renderLifeList(current.dataset.life);
+    }
+  });
 }
 function renderLifeList(cat, filterCancerId=null){
   const box = document.getElementById('life-content'); if(!box) return;
