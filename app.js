@@ -580,27 +580,41 @@ async function fetchTrials(params = {}){
 
 window.TRIAL_FILTERS = { recruitingOnly:true, drugOnly:true, japanFirst:true, phaseMin:'2' };
 
+// ==== 置換：renderTrialsFallback（信頼サイトの深掘りリンクつき） ====
 function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
-  const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
-  const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
+  const cancers = Array.isArray(DATA.cancers) ? DATA.cancers : [];
+  const histos  = Array.isArray(DATA.histologies) ? DATA.histologies : [];
+  const cancer  = cancers.find(c => c.id === cancerId) || null;
+  const histo   = histos.find(h => h.id === histologyId) || null;
 
-  // 表示用ラベル
+  // 部位の日本語ラベル（検索補助）
   const SITE_JP_LABELS = {
     oral:'口腔がん', oropharynx:'中咽頭がん', hypopharynx:'下咽頭がん',
     nasopharynx:'上咽頭がん', larynx:'喉頭がん', nasal:'鼻・副鼻腔がん',
     salivary:'唾液腺がん'
   };
+  // Googleの site: を部位配下に寄せるための“ディレクトリ候補”
+  // （厳密な下層URLはサイト側の構造変更で変わり得るため、public/cancer配下で部位名キーワードも併記して狙い撃ち）
+  const SITE_HINT_WORD = {
+    oral:'口腔', oropharynx:'中咽頭', hypopharynx:'下咽頭',
+    nasopharynx:'上咽頭', larynx:'喉頭', nasal:'鼻 副鼻腔',
+    salivary:'唾液腺'
+  };
+
+  // 検索語（狭い/広い）
+  const narrowJP = (histo?.aliases?.[0]) || histo?.name || cancer?.name || '頭頸部がん';
+  // 英語は ClinicalTrials.gov / PubMed 用
   const SITE_EN_LABELS = {
     oral:'oral cavity cancer', oropharynx:'oropharyngeal cancer', hypopharynx:'hypopharyngeal cancer',
     nasopharynx:'nasopharyngeal carcinoma', larynx:'laryngeal cancer', nasal:'nasal cavity or paranasal sinus cancer',
     salivary:'salivary gland cancer'
   };
-
-  // 検索語候補（狭い／広い）
-  const narrowJP = histo?.aliases?.[0] || histo?.name || cancer?.name || '頭頸部がん';
   let narrowEN = 'head and neck cancer';
   if (histo){
-    narrowEN = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || narrowEN;
+    narrowEN =
+      (histo.aliases||[]).find(a => /[a-z]/i.test(a)) ||
+      (histo.name.match(/\((.+?)\)/)?.[1]) ||
+      narrowEN;
   } else if (cancer){
     narrowEN = SITE_EN_LABELS[cancer.id] || narrowEN;
   }
@@ -610,37 +624,48 @@ function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
     broadJP = '唾液腺がん'; broadEN = 'salivary gland cancer';
   }
 
-  // ====== 先に「信頼できる国内情報」への導線を提示 ======
-  const qJP      = encodeURIComponent(narrowJP);
-  const siteJP   = cancer ? SITE_JP_LABELS[cancer.id] : '';
-  const ganjohoBase  = 'https://ganjoho.jp';
-  const ganjohoHead  = `${ganjohoBase}/public/cancer/head_neck/`;               // 頭頸部総合ページ
-  const ganjohoSearch= `${ganjohoBase}/word/index.html?searchKeyword=${qJP}`;    // 用語検索（全体）
-  const medNoteSearch= `https://medicalnote.jp/search?q=${qJP}`;                 // メディカルノート検索
+  // ====== 信頼できる情報（国内） deep search ======
+  const qNarrowJP  = encodeURIComponent(narrowJP);
+  const qSiteJP    = SITE_JP_LABELS[cancerId] || '';
+  const hintWord   = SITE_HINT_WORD[cancerId] || '';
 
-  // がん情報サービス：部位が特定できる時は頭頸部ページ＋サイト名で検索も
-  const trustedLinksHTML = `
-    <div class="card">
-      <h3>信頼できる情報（国内）</h3>
-      <ul class="list small">
-        <li><a target="_blank" rel="noopener" href="${ganjohoHead}">がん情報サービス：頭頸部（総合）</a></li>
-        <li><a target="_blank" rel="noopener" href="${ganjohoSearch}">がん情報サービス内 検索：「${escapeHtml(narrowJP)}」</a></li>
-        <li><a target="_blank" rel="noopener" href="${medNoteSearch}">メディカルノート内 検索：「${escapeHtml(narrowJP)}」</a></li>
-      </ul>
-      <p class="meta">※まずは国内の標準治療・副作用対策・生活支援の基礎情報を確認できます。</p>
-    </div>
-  `;
+  // がん情報サービス：総合ページ＋サイト内検索＋部位配下に寄せた site: 検索（Google）
+  const ganjohoBase   = 'https://ganjoho.jp';
+  const ganjohoHeadHN = `${ganjohoBase}/public/cancer/head_neck/`;                 // 頭頸部総合
+  const ganjohoWord   = `${ganjohoBase}/word/index.html?searchKeyword=${qNarrowJP}`; // サイト内用語検索
+  // 「public/cancer」配下に限定し、部位ヒント語も同居させて“腺様嚢胞癌 × 唾液腺”等を狙い撃ち
+  const ganjohoDeepQ  = encodeURIComponent(`site:ganjoho.jp/public/cancer ${narrowJP} ${hintWord}`); 
+  const ganjohoDeep   = `https://www.google.com/search?q=${ganjohoDeepQ}`;
 
-  // ====== その下に「自動検索リンク（補助）」を表示 ======
+  // メディカルノート：通常検索＋ site: 限定
+  const medBaseSearch = `https://medicalnote.jp/search?q=${qNarrowJP}`;
+  const medDeepQ      = encodeURIComponent(`site:medicalnote.jp ${narrowJP} ${hintWord}`);
+  const medDeep       = `https://www.google.com/search?q=${medDeepQ}`;
+
+  // ====== 研究・治験 検索リンク（補助） ======
   const qJPa = encodeURIComponent(`${narrowJP} 治験`);
   const qENa = encodeURIComponent(`${narrowEN} clinical trial`);
   const qJPb = encodeURIComponent(`${broadJP} 治験`);
   const qENb = encodeURIComponent(`${broadEN} clinical trial`);
 
+  const trustedLinksHTML = `
+    <div class="card">
+      <h3>信頼できる情報（国内）</h3>
+      <ul class="list small">
+        <li><a target="_blank" rel="noopener" href="${ganjohoHeadHN}">がん情報サービス：頭頸部（総合）</a></li>
+        <li><a target="_blank" rel="noopener" href="${ganjohoWord}">がん情報サービス内 検索：「${escapeHtml(narrowJP)}」</a></li>
+        <li><a target="_blank" rel="noopener" href="${ganjohoDeep}">がん情報サービス（部位配下に寄せた深掘り検索）：「${escapeHtml(narrowJP)}」×「${escapeHtml(hintWord)}」</a></li>
+        <li><a target="_blank" rel="noopener" href="${medBaseSearch}">メディカルノート内 検索：「${escapeHtml(narrowJP)}」</a></li>
+        <li><a target="_blank" rel="noopener" href="${medDeep}">メディカルノート（深掘り site: 検索）：「${escapeHtml(narrowJP)}」×「${escapeHtml(hintWord)}」</a></li>
+      </ul>
+      <p class="meta">※部位配下に絞った <code>site:</code> 検索も併用し、該当ページに“最短で”当たれるようにしています。</p>
+    </div>
+  `;
+
   const searchLinksHTML = `
     <div class="card">
       <h3>自動検索リンク（補助）</h3>
-      <p class="meta">API取得に失敗/0件のため、狭い・広い両方の候補を提示します。</p>
+      <p class="meta">API取得に失敗/0件のため、狭い・広い両方の候補も提示します。</p>
       <ul class="list small">
         <li><strong>狭い：</strong>
           <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPa}">Google（日本語）</a> ／
