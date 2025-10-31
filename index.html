@@ -3,130 +3,175 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HNC Community</title>
+  <title>頭頸部がんコミュニティポータル</title>
+  <meta name="theme-color" content="#0f172a" />
+
   <style>
-    :root { --bg:#0b1220; --card:#121a2b; --ink:#e8eefc; --muted:#9fb0d0; --accent:#7aa6ff; }
+    :root{
+      --bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--muted:#94a3b8;--accent:#60a5fa;--pill:#1e293b;
+      --shadow:0 6px 20px rgba(0,0,0,.25);
+    }
     *{box-sizing:border-box}
-    body{margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans JP, sans-serif; color:var(--ink); background:linear-gradient(180deg,#0b1220,#0d1430 40%,#0f193a 100%); min-height:100dvh}
-    header{position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(6px); background:rgba(10,16,32,.6); border-bottom:1px solid rgba(255,255,255,.06)}
-    .wrap{max-width:1100px; margin:0 auto; padding:16px}
-    .tabs{display:flex; gap:8px; flex-wrap:wrap}
-    .tab-btn{padding:10px 14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); color:var(--ink); border-radius:12px; cursor:pointer}
-    .tab-btn.active{outline:2px solid var(--accent); background:rgba(122,166,255,.12)}
-    main .tab{display:none; padding:16px}
-    main .tab.active{display:block}
-    h2,h3{margin:10px 0 12px}
-    .grid{display:grid; gap:12px}
-    @media(min-width:900px){ .grid.cols-2{grid-template-columns:1fr 1fr} .grid.cols-3{grid-template-columns:repeat(3,1fr)} }
-    .card{background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px}
-    .list{list-style:none; padding:0; margin:0}
-    .list li{padding:10px 0; border-bottom:1px dashed rgba(255,255,255,.08)}
-    .list li:last-child{border-bottom:none}
-    .small li{padding:8px 0}
-    .meta{color:var(--muted); font-size:.92rem}
-    .badge{display:inline-block; font-size:.78rem; padding:2px 8px; border:1px solid rgba(255,255,255,.18); border-radius:999px; margin-left:6px}
-    input, select{width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#0c1324; color:var(--ink)}
-    a{color:#b9ccff}
-    .linklike{background:transparent; border:1px dashed rgba(255,255,255,.18); color:#b9ccff; border-radius:999px; padding:6px 10px; cursor:pointer}
-    /* 花びら（オプション） */
-    #petals{pointer-events:none; position:fixed; inset:0; overflow:hidden}
-    .petal{position:absolute; top:-5vh; width:12px; height:12px; background:radial-gradient(#ffd7e1,#ff9ac0); border-radius:50%;
-      animation:fall var(--dur,12s) linear infinite; opacity:.8; filter:blur(.2px)}
+    html,body{height:100%}
+    body{
+      margin:0;background:radial-gradient(1200px 800px at 70% -200px,#162238 0%,#0b1220 55%,#070c17 100%);
+      color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;
+    }
+    header{
+      position:sticky;top:0;z-index:20;
+      background:rgba(11,18,32,.7);backdrop-filter:saturate(140%) blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.02em}
+    nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tab-btn{
+      appearance:none;border:0;cursor:pointer;
+      padding:8px 12px;border-radius:999px;background:var(--pill);color:var(--ink);
+      box-shadow:var(--shadow);transition:transform .06s ease;
+      font-weight:600;font-size:14px
+    }
+    .tab-btn:hover{transform:translateY(-1px)}
+    .tab-btn.active{background:linear-gradient(90deg,#2563eb,#22d3ee);color:white}
+
+    main .wrap{padding:18px}
+    .tabs{margin-top:12px}
+    .tab{display:none}
+    .tab.active{display:block}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+    .col-6{grid-column:span 6}
+    .col-12{grid-column:span 12}
+    @media (max-width:900px){.col-6{grid-column:span 12}}
+
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;padding:16px;box-shadow:var(--shadow)
+    }
+    .badge{
+      display:inline-block;padding:2px 8px;border-radius:999px;
+      background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);
+      color:#bfdbfe;font-size:12px;margin-left:6px
+    }
+    .meta{color:var(--muted);font-size:13px}
+    .list{list-style:none;padding:0;margin:0}
+    .list li{padding:10px 0;border-bottom:1px dotted rgba(255,255,255,.08)}
+    .list.small li{padding:8px 0}
+    a{color:#93c5fd;text-decoration:none}
+    a.linklike{color:#eab308}
+    input[type="search"],input[type="text"],select{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+      background:#0b1220;color:var(--ink);outline:none
+    }
+
+    /* ひらひら */
+    #petals{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+    .petal{
+      position:absolute;top:-5vh;left:0;width:14px;height:8px;border-radius:999px;
+      background:linear-gradient(90deg,#fca5a5,#fecaca);
+      filter:blur(.2px);opacity:.7;
+      animation:fall var(--dur,10s) linear infinite
+    }
     @keyframes fall{
-      0%{transform:translateX(0) translateY(-10vh) rotate(0deg)}
-      100%{transform:translateX(var(--wind,20vw)) translateY(120vh) rotate(540deg)}
+      0%{transform:translateX(0) translateY(-10vh) rotate(0)}
+      50%{transform:translateX(var(--wind,20vw)) translateY(55vh) rotate(180deg)}
+      100%{transform:translateX(calc(var(--wind,20vw) * 2)) translateY(110vh) rotate(360deg)}
     }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <div class="tabs">
+      <h1>頭頸部がんコミュニティポータル</h1>
+      <nav>
         <button class="tab-btn active" data-tab="home">ホーム</button>
         <button class="tab-btn" data-tab="community">コミュニティ</button>
         <button class="tab-btn" data-tab="treatments">治療情報</button>
         <button class="tab-btn" data-tab="life">生活の工夫</button>
         <button class="tab-btn" data-tab="bookmarks">ブックマーク</button>
-      </div>
+      </nav>
     </div>
   </header>
 
-  <main class="wrap">
-    <!-- ホーム -->
-    <section id="home" class="tab active">
-      <h2>総合検索</h2>
-      <div class="grid cols-2">
-        <div class="card">
-          <h3>部位から探す</h3>
-          <input id="cancer-search" placeholder="例: 喉頭がん / C32 / oral…" />
-          <ul id="cancer-list" class="list" style="margin-top:10px"></ul>
-        </div>
-        <div class="card">
-          <h3>組織型から探す</h3>
-          <input id="histo-search" placeholder="例: 腺様嚢胞癌 / ACC / MEC…" />
-          <ul id="histo-list" class="list" style="margin-top:10px"></ul>
-        </div>
-      </div>
+  <main class="tabs">
+    <div class="wrap">
 
-      <div class="card" style="margin-top:12px">
-        <h3>クイックナビ</h3>
-        <input id="global-search" placeholder="部位名・組織型で横断検索" />
-        <ul id="global-results" class="list small" style="margin-top:10px"></ul>
-      </div>
-    </section>
+      <!-- Home -->
+      <section id="home" class="tab active">
+        <div class="grid">
+          <div class="col-6">
+            <div class="card">
+              <h3>部位で探す</h3>
+              <input id="cancer-search" type="search" placeholder="例：喉頭がん / C32 / parotid..." />
+              <ul id="cancer-list" class="list" style="margin-top:10px"></ul>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card">
+              <h3>組織型で探す</h3>
+              <input id="histo-search" type="search" placeholder="例：腺様嚢胞癌 / ACC / MEC..." />
+              <ul id="histo-list" class="list" style="margin-top:10px"></ul>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card">
+              <h3>総合検索</h3>
+              <input id="global-search" type="search" placeholder="がん種名や組織型名を入力..." />
+              <ul id="global-results" class="list small" style="margin-top:10px"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <!-- コミュニティ -->
-    <section id="community" class="tab">
-      <div class="grid cols-2">
+      <!-- Community -->
+      <section id="community" class="tab">
         <div class="card">
           <h3>種類を選択</h3>
-          <select id="community-select"></select>
-          <p class="meta" style="margin-top:8px">部位（口腔・中咽頭…）または 組織型（ACC/MEC など）を選べます。</p>
+          <select id="community-select">
+            <option disabled selected>読み込み中...</option>
+          </select>
         </div>
-        <div class="card" id="trials">
-          <h3>最新の治験・研究</h3>
-          <!-- JS がコントロール/リストを描画 -->
+        <div id="community-content" class="grid" style="margin-top:14px">
+          <!-- JSで注入 -->
         </div>
-      </div>
-      <div id="community-content" class="grid cols-2" style="margin-top:12px">
-        <!-- JS が話題・リンクなどを描画 -->
-      </div>
-    </section>
+        <div id="trials" class="card" style="margin-top:14px">
+          <!-- JSで治験：フィルタ・一覧 or フォールバックリンク -->
+        </div>
+      </section>
 
-    <!-- 治療情報 -->
-    <section id="treatments" class="tab">
-      <div class="card">
-        <h2>信頼できる治療情報の入り口</h2>
-        <ul id="treatment-links" class="list small"></ul>
-      </div>
-    </section>
+      <!-- Treatments -->
+      <section id="treatments" class="tab">
+        <div class="card">
+          <h3>公的・一次情報（基礎）</h3>
+          <ul id="treatment-links" class="list small"></ul>
+        </div>
+      </section>
 
-    <!-- 生活の工夫 -->
-    <section id="life" class="tab">
-      <div class="card">
-        <h2>生活の工夫 / QOL ヒント</h2>
-        <p class="meta">上のボタンで「手術 / 放射線治療 / 抗がん剤治療 / その他の治療」を切り替えできます。</p>
-      </div>
-      <div class="card">
-        <ul id="life-tips" class="list"></ul>
-      </div>
-    </section>
+      <!-- Life -->
+      <section id="life" class="tab">
+        <div class="card">
+          <h3>生活の工夫・QOL</h3>
+          <p class="meta">「手術」「放射線治療」「抗がん剤治療」「その他の治療」で絞り込めます。部位別フィルタはホーム/コミュニティから。</p>
+        </div>
+        <div class="card">
+          <ul id="life-tips" class="list"></ul>
+        </div>
+      </section>
 
-    <!-- ブックマーク -->
-    <section id="bookmarks" class="tab">
-      <div class="card">
-        <h2>ブックマーク</h2>
-        <ul id="bookmarks" class="list"></ul>
-      </div>
-    </section>
+      <!-- Bookmarks -->
+      <section id="bookmarks" class="tab">
+        <div class="card">
+          <h3>ブックマーク</h3>
+          <ul id="bookmarks" class="list small"></ul>
+        </div>
+      </section>
+
+    </div>
   </main>
 
-  <!-- 花びら（任意） -->
   <div id="petals"></div>
 
-  <script src="./app.js"></script>
   <script>
-    // 花びら演出（任意）
     (function makePetals(){
       const field = document.getElementById('petals'); if(!field) return;
       const N = 24;
@@ -140,5 +185,7 @@
       }
     })();
   </script>
+
+  <script src="./app.js?v=40" defer></script>
 </body>
 </html>
