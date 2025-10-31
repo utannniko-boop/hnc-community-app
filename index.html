@@ -3,189 +3,187 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>頭頸部がんコミュニティポータル</title>
-  <meta name="theme-color" content="#0f172a" />
-
+  <title>頭頸部がんコミュニティ Hub</title>
   <style>
-    :root{
-      --bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--muted:#94a3b8;--accent:#60a5fa;--pill:#1e293b;
-      --shadow:0 6px 20px rgba(0,0,0,.25);
+    :root {
+      --bg:#0c1020; --card:#101631; --ink:#e8ecff; --muted:#a8b0d9; --accent:#7aa6ff; --chip:#24305a;
+      --gap:14px; --radius:16px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;background:radial-gradient(1200px 800px at 70% -200px,#162238 0%,#0b1220 55%,#070c17 100%);
-      color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans","Noto Sans JP",sans-serif;
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Segoe UI Symbol", sans-serif;
+      color:var(--ink); background: radial-gradient(1200px 600px at 70% -10%, #2130a5 0%, #0c1020 55%) fixed;
     }
-    header{
-      position:sticky;top:0;z-index:20;
-      background:rgba(11,18,32,.7);backdrop-filter:saturate(140%) blur(10px);
-      border-bottom:1px solid rgba(255,255,255,.06)
+    header {
+      position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);
+      background: rgba(10,14,30,.55); border-bottom:1px solid rgba(255,255,255,.08);
     }
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.02em}
-    nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .tab-btn{
-      appearance:none;border:0;cursor:pointer;
-      padding:8px 12px;border-radius:999px;background:var(--pill);color:var(--ink);
-      box-shadow:var(--shadow);transition:transform .06s ease;
-      font-weight:600;font-size:14px
+    .bar {
+      display:flex; gap:8px; align-items:center; max-width:1100px; margin:0 auto; padding:12px 16px;
     }
-    .tab-btn:hover{transform:translateY(-1px)}
-    .tab-btn.active{background:linear-gradient(90deg,#2563eb,#22d3ee);color:white}
+    h1 { margin:0; font-size:18px; letter-spacing:.02em; font-weight:700; }
+    nav { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+    nav button {
+      appearance:none; border:1px solid rgba(255,255,255,.1); background:var(--chip); color:var(--ink);
+      padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600;
+    }
+    nav button.active { outline:2px solid var(--accent); background:#18245a; }
+    main { max-width:1100px; margin:18px auto 80px; padding:0 16px; }
+    .tab { display:none; }
+    .tab.active { display:block; }
 
-    main .wrap{padding:18px}
-    .tabs{margin-top:12px}
-    .tab{display:none}
-    .tab.active{display:block}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
-    .col-6{grid-column:span 6}
-    .col-12{grid-column:span 12}
-    @media (max-width:900px){.col-6{grid-column:span 12}}
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:var(--gap); }
+    .col-12 { grid-column: span 12; }
+    .col-6  { grid-column: span 6; }
+    @media (max-width: 900px){
+      .col-6 { grid-column: span 12; }
+    }
 
-    .card{
-      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;padding:16px;box-shadow:var(--shadow)
+      border-radius:var(--radius); padding:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25) inset, 0 6px 24px rgba(0,0,0,.25);
     }
-    .badge{
-      display:inline-block;padding:2px 8px;border-radius:999px;
-      background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);
-      color:#bfdbfe;font-size:12px;margin-left:6px
+    .card h3 { margin:0 0 10px; font-size:18px; }
+    .meta { color:var(--muted); font-size:13px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#21306d; color:#cfe0ff; font-size:12px; border:1px solid rgba(255,255,255,.1); }
+    .list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .list.small li { font-size:14px; }
+    .linklike { color:#bcd2ff; text-decoration:underline; cursor:pointer; }
+    a { color:#c7d6ff; text-decoration: none; border-bottom:1px dashed rgba(255,255,255,.25); }
+    a:hover { opacity:.9; }
+    input[type="text"], select {
+      width:100%; background:#0b1230; color:var(--ink); border:1px solid rgba(255,255,255,.15);
+      padding:10px 12px; border-radius:12px; outline:none;
     }
-    .meta{color:var(--muted);font-size:13px}
-    .list{list-style:none;padding:0;margin:0}
-    .list li{padding:10px 0;border-bottom:1px dotted rgba(255,255,255,.08)}
-    .list.small li{padding:8px 0}
-    a{color:#93c5fd;text-decoration:none}
-    a.linklike{color:#eab308}
-    input[type="search"],input[type="text"],select{
-      width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
-      background:#0b1220;color:var(--ink);outline:none
-    }
+    .chiprow { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .chip { background:#202a58; border:1px solid rgba(255,255,255,.1); color:#dce6ff; font-size:12px; padding:4px 8px; border-radius:999px; }
 
-    /* ひらひら */
-    #petals{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-    .petal{
-      position:absolute;top:-5vh;left:0;width:14px;height:8px;border-radius:999px;
-      background:linear-gradient(90deg,#fca5a5,#fecaca);
-      filter:blur(.2px);opacity:.7;
-      animation:fall var(--dur,10s) linear infinite
+    /* 生活の工夫：カテゴリボタン */
+    #life-cat-controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+    #life-cat-controls button {
+      appearance:none; background:#16204a; border:1px solid rgba(255,255,255,.1); color:#e8ecff;
+      padding:7px 12px; border-radius:999px; cursor:pointer; font-weight:600;
     }
-    @keyframes fall{
-      0%{transform:translateX(0) translateY(-10vh) rotate(0)}
-      50%{transform:translateX(var(--wind,20vw)) translateY(55vh) rotate(180deg)}
-      100%{transform:translateX(calc(var(--wind,20vw) * 2)) translateY(110vh) rotate(360deg)}
-    }
+    #life-cat-controls button.active { outline:2px solid var(--accent); background:#1b2b62; }
+
+    footer { color:#8fa3e6; font-size:12px; text-align:center; padding:30px 0; opacity:.85; }
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <h1>頭頸部がんコミュニティポータル</h1>
+    <div class="bar">
+      <h1>頭頸部がんコミュニティ Hub</h1>
       <nav>
         <button class="tab-btn active" data-tab="home">ホーム</button>
         <button class="tab-btn" data-tab="community">コミュニティ</button>
         <button class="tab-btn" data-tab="treatments">治療情報</button>
         <button class="tab-btn" data-tab="life">生活の工夫</button>
-        <button class="tab-btn" data-tab="bookmarks">ブックマーク</button>
+        <button class="tab-btn" data-tab="about">このサイト</button>
       </nav>
     </div>
   </header>
 
-  <main class="tabs">
-    <div class="wrap">
-
-      <!-- Home -->
-      <section id="home" class="tab active">
-        <div class="grid">
-          <div class="col-6">
-            <div class="card">
-              <h3>部位で探す</h3>
-              <input id="cancer-search" type="search" placeholder="例：喉頭がん / C32 / parotid..." />
-              <ul id="cancer-list" class="list" style="margin-top:10px"></ul>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="card">
-              <h3>組織型で探す</h3>
-              <input id="histo-search" type="search" placeholder="例：腺様嚢胞癌 / ACC / MEC..." />
-              <ul id="histo-list" class="list" style="margin-top:10px"></ul>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="card">
-              <h3>総合検索</h3>
-              <input id="global-search" type="search" placeholder="がん種名や組織型名を入力..." />
-              <ul id="global-results" class="list small" style="margin-top:10px"></ul>
-            </div>
+  <main>
+    <!-- ホーム -->
+    <section id="home" class="tab active">
+      <div class="grid">
+        <div class="col-6">
+          <div class="card">
+            <h3>総合検索（部位・組織型）</h3>
+            <p class="meta">部位名（例：喉頭がん / C32）や組織型（例：腺様嚢胞癌 / ACC）で検索できます。</p>
+            <input id="global-search" type="text" placeholder="例：喉頭がん / 腺様嚢胞癌 / C32 / ACC など" />
+            <ul id="global-results" class="list" style="margin-top:12px;"></ul>
           </div>
         </div>
-      </section>
+        <div class="col-6">
+          <div class="card">
+            <h3>部位で探す</h3>
+            <input id="cancer-search" type="text" placeholder="例：口腔がん / 中咽頭 / C10 …" />
+            <ul id="cancer-list" class="list" style="margin-top:12px;"></ul>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card">
+            <h3>組織型で探す</h3>
+            <input id="histo-search" type="text" placeholder="例：腺様嚢胞癌 / 粘表皮癌 / メラノーマ …" />
+            <ul id="histo-list" class="list" style="margin-top:12px;"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <!-- Community -->
-      <section id="community" class="tab">
-        <div class="card">
-          <h3>種類を選択</h3>
-          <select id="community-select">
-            <option disabled selected>読み込み中...</option>
-          </select>
+    <!-- コミュニティ -->
+    <section id="community" class="tab">
+      <div class="grid">
+        <div class="col-12">
+          <div class="card">
+            <h3>種類を選ぶ</h3>
+            <select id="community-select">
+              <option value="" disabled selected>読み込み中…</option>
+            </select>
+          </div>
         </div>
-        <div id="community-content" class="grid" style="margin-top:14px">
-          <!-- JSで注入 -->
+        <div class="col-12">
+          <div id="community-content" class="grid">
+            <!-- JS が内容を描画 -->
+          </div>
         </div>
-        <div id="trials" class="card" style="margin-top:14px">
-          <!-- JSで治験：フィルタ・一覧 or フォールバックリンク -->
+        <div class="col-12">
+          <div id="trials" class="card">
+            <h3>最新の治験・研究（自動）</h3>
+            <p class="meta">ClinicalTrials.gov から取得を試みます。CORSや0件時は信頼先リンクを提示します。</p>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Treatments -->
-      <section id="treatments" class="tab">
-        <div class="card">
-          <h3>公的・一次情報（基礎）</h3>
-          <ul id="treatment-links" class="list small"></ul>
+    <!-- 治療情報（公式リンク集） -->
+    <section id="treatments" class="tab">
+      <div class="grid">
+        <div class="col-12">
+          <div class="card">
+            <h3>根拠とガイドライン（公式・一次情報）</h3>
+            <ul id="treatment-links" class="list small"></ul>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Life -->
-      <section id="life" class="tab">
-        <div class="card">
-          <h3>生活の工夫・QOL</h3>
-          <p class="meta">「手術」「放射線治療」「抗がん剤治療」「その他の治療」で絞り込めます。部位別フィルタはホーム/コミュニティから。</p>
+    <!-- 生活の工夫 -->
+    <section id="life" class="tab">
+      <div class="grid">
+        <div class="col-12">
+          <div class="card">
+            <h3>生活の工夫・QOL</h3>
+            <p class="meta">上のボタンで「手術」「放射線治療」「抗がん剤治療」「その他の治療」を切替。ホームやコミュニティから部位を選ぶと、その部位に関連する工夫が絞り込まれます。</p>
+            <!-- カテゴリボタンは JS で差し込み -->
+            <ul id="life-tips" class="list small" style="margin-top:12px;"></ul>
+          </div>
         </div>
-        <div class="card">
-          <ul id="life-tips" class="list"></ul>
-        </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Bookmarks -->
-      <section id="bookmarks" class="tab">
-        <div class="card">
-          <h3>ブックマーク</h3>
-          <ul id="bookmarks" class="list small"></ul>
+    <!-- このサイト -->
+    <section id="about" class="tab">
+      <div class="grid">
+        <div class="col-12">
+          <div class="card">
+            <h3>このサイトについて</h3>
+            <p>信頼できる公的情報（国立がん研究センター、NCI PDQ、NICE、ESMO、ASCO など）への入口と、治験・研究の自動検索、生活の工夫の知恵をまとめています。</p>
+            <ul class="list small">
+              <li>データはローカルの <code>resources.json</code> を読み込み、なければ内蔵のデータで動作します。</li>
+              <li>ClinicalTrials.gov の取得は CORS などで失敗する場合があるため、その際は信頼サイトへの検索リンクを自動生成します。</li>
+            </ul>
+          </div>
         </div>
-      </section>
-
-    </div>
+      </div>
+    </section>
   </main>
 
-  <div id="petals"></div>
+  <footer>© 2025 HNC Community Hub</footer>
 
-  <script>
-    (function makePetals(){
-      const field = document.getElementById('petals'); if(!field) return;
-      const N = 24;
-      for(let i=0;i<N;i++){
-        const s=document.createElement('span'); s.className='petal';
-        const x=Math.random()*100+'vw'; const wind=(Math.random()*60-20)+'vw';
-        const delay=(Math.random()*-12)+'s'; const dur=(8+Math.random()*8)+'s';
-        s.style.left=x; s.style.setProperty('--x',x); s.style.setProperty('--wind',wind);
-        s.style.animationDelay=delay; s.style.setProperty('--dur',dur);
-        field.appendChild(s);
-      }
-    })();
-  </script>
-
-  <script src="./app.js?v=40" defer></script>
+  <script src="./app.js?v=41"></script>
 </body>
 </html>
