@@ -556,32 +556,83 @@ async function fetchTrials(params = {}){
 
 window.TRIAL_FILTERS = { recruitingOnly:true, drugOnly:true, japanFirst:true, phaseMin:'2' };
 
-function renderTrialsControls(box){
-  if (!box) return;
-  const c = document.createElement('div');
-  c.id = 'trials-controls';
-  c.className = 'meta';
-  c.style.margin = '8px 0 12px';
-  c.innerHTML = `
-    <label style="margin-right:12px;"><input type="checkbox" id="flt-recruit" ${window.TRIAL_FILTERS.recruitingOnly?'checked':''}/> 募集中のみ</label>
-    <label style="margin-right:12px;"><input type="checkbox" id="flt-drug" ${window.TRIAL_FILTERS.drugOnly?'checked':''}/> 薬剤など介入あり</label>
-    <label style="margin-right:12px;"><input type="checkbox" id="flt-jp" ${window.TRIAL_FILTERS.japanFirst?'checked':''}/> 日本を優先</label>
-    <label>フェーズ最小:
-      <select id="flt-phase">
-        <option value="Any" ${window.TRIAL_FILTERS.phaseMin==='Any'?'selected':''}>指定なし</option>
-        <option value="1" ${window.TRIAL_FILTERS.phaseMin==='1'?'selected':''}>Phase 1+</option>
-        <option value="2" ${window.TRIAL_FILTERS.phaseMin==='2'?'selected':''}>Phase 2+</option>
-        <option value="3" ${window.TRIAL_FILTERS.phaseMin==='3'?'selected':''}>Phase 3+</option>
-        <option value="4" ${window.TRIAL_FILTERS.phaseMin==='4'?'selected':''}>Phase 4</option>
-      </select>
-    </label>
+function renderTrialsFallback(box, { cancerId=null, histologyId=null } = {}){
+  const cancer = (Array.isArray(DATA.cancers) ? DATA.cancers : []).find(c => c.id === cancerId);
+  const histo  = (Array.isArray(DATA.histologies) ? DATA.histologies : []).find(h => h.id === histologyId);
+
+  // 表示用ラベル
+  const SITE_JP_LABELS = {
+    oral:'口腔がん', oropharynx:'中咽頭がん', hypopharynx:'下咽頭がん',
+    nasopharynx:'上咽頭がん', larynx:'喉頭がん', nasal:'鼻・副鼻腔がん',
+    salivary:'唾液腺がん'
+  };
+  const SITE_EN_LABELS = {
+    oral:'oral cavity cancer', oropharynx:'oropharyngeal cancer', hypopharynx:'hypopharyngeal cancer',
+    nasopharynx:'nasopharyngeal carcinoma', larynx:'laryngeal cancer', nasal:'nasal cavity or paranasal sinus cancer',
+    salivary:'salivary gland cancer'
+  };
+
+  // 検索語候補（狭い／広い）
+  const narrowJP = histo?.aliases?.[0] || histo?.name || cancer?.name || '頭頸部がん';
+  let narrowEN = 'head and neck cancer';
+  if (histo){
+    narrowEN = (histo.aliases||[]).find(a => /[a-z]/i.test(a)) || (histo.name.match(/\((.+?)\)/)?.[1]) || narrowEN;
+  } else if (cancer){
+    narrowEN = SITE_EN_LABELS[cancer.id] || narrowEN;
+  }
+  let broadJP = '頭頸部がん';
+  let broadEN = 'head and neck cancer';
+  if (histologyId === 'adenoid-cystic' || histologyId === 'mucoepidermoid' || cancerId === 'salivary') {
+    broadJP = '唾液腺がん'; broadEN = 'salivary gland cancer';
+  }
+
+  // ====== 先に「信頼できる国内情報」への導線を提示 ======
+  const qJP      = encodeURIComponent(narrowJP);
+  const siteJP   = cancer ? SITE_JP_LABELS[cancer.id] : '';
+  const ganjohoBase  = 'https://ganjoho.jp';
+  const ganjohoHead  = `${ganjohoBase}/public/cancer/head_neck/`;               // 頭頸部総合ページ
+  const ganjohoSearch= `${ganjohoBase}/word/index.html?searchKeyword=${qJP}`;    // 用語検索（全体）
+  const medNoteSearch= `https://medicalnote.jp/search?q=${qJP}`;                 // メディカルノート検索
+
+  // がん情報サービス：部位が特定できる時は頭頸部ページ＋サイト名で検索も
+  const trustedLinksHTML = `
+    <div class="card">
+      <h3>信頼できる情報（国内）</h3>
+      <ul class="list small">
+        <li><a target="_blank" rel="noopener" href="${ganjohoHead}">がん情報サービス：頭頸部（総合）</a></li>
+        <li><a target="_blank" rel="noopener" href="${ganjohoSearch}">がん情報サービス内 検索：「${escapeHtml(narrowJP)}」</a></li>
+        <li><a target="_blank" rel="noopener" href="${medNoteSearch}">メディカルノート内 検索：「${escapeHtml(narrowJP)}」</a></li>
+      </ul>
+      <p class="meta">※まずは国内の標準治療・副作用対策・生活支援の基礎情報を確認できます。</p>
+    </div>
   `;
-  box.appendChild(c);
-  const $ = (sel)=>c.querySelector(sel);
-  $('#flt-recruit').addEventListener('change', e => { window.TRIAL_FILTERS.recruitingOnly = e.target.checked; rerenderTrialsList(); });
-  $('#flt-drug').addEventListener('change', e => { window.TRIAL_FILTERS.drugOnly = e.target.checked; rerenderTrialsList(); });
-  $('#flt-jp').addEventListener('change', e => { window.TRIAL_FILTERS.japanFirst = e.target.checked; rerenderTrialsList(); });
-  $('#flt-phase').addEventListener('change', e => { window.TRIAL_FILTERS.phaseMin = e.target.value; rerenderTrialsList(); });
+
+  // ====== その下に「自動検索リンク（補助）」を表示 ======
+  const qJPa = encodeURIComponent(`${narrowJP} 治験`);
+  const qENa = encodeURIComponent(`${narrowEN} clinical trial`);
+  const qJPb = encodeURIComponent(`${broadJP} 治験`);
+  const qENb = encodeURIComponent(`${broadEN} clinical trial`);
+
+  const searchLinksHTML = `
+    <div class="card">
+      <h3>自動検索リンク（補助）</h3>
+      <p class="meta">API取得に失敗/0件のため、狭い・広い両方の候補を提示します。</p>
+      <ul class="list small">
+        <li><strong>狭い：</strong>
+          <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPa}">Google（日本語）</a> ／
+          <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENa}">Google（英語）</a> ／
+          <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENa}">CT.gov 内検索</a>
+        </li>
+        <li><strong>広い：</strong>
+          <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qJPb}">Google（日本語）</a> ／
+          <a target="_blank" rel="noopener" href="https://www.google.com/search?q=${qENb}">Google（英語）</a> ／
+          <a target="_blank" rel="noopener" href="https://clinicaltrials.gov/search?cond=${qENb}">CT.gov 内検索</a>
+        </li>
+      </ul>
+    </div>
+  `;
+
+  box.innerHTML = trustedLinksHTML + searchLinksHTML;
 }
 function passFilters(t){
   const F = window.TRIAL_FILTERS;
