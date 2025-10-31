@@ -1,13 +1,24 @@
 /* =========================================================
-   HNC Community Hub - app.js (Full Replace)
-   - 総合検索（部位/組織型）
-   - コミュニティ描画（話題/関連リンク/治験）
-   - 治療リンク（公式）
-   - 生活の工夫（手術/放射線/抗がん剤/その他）
+   HNC Community Hub - app.js (TDZ/再定義対策版)
+   ポイント:
+   1) 最上部でグローバル名前空間 HNC を固定
+   2) HNC.DATA を即初期化（var で TDZ 無し）
+   3) 以後は const/let の再定義をしない
+   4) DOMContentLoaded 後に boot()
 ========================================================= */
 
-/* ---------- グローバル状態 ---------- */
-let DATA = { cancers: [], histologies: [], treatments: [], life: [] };
+/* 1) 名前空間の固定（再読込でも上書きしない） */
+window.HNC = window.HNC || {};
+
+/* 2) DATA を最初に初期化（TDZ回避のため var + 直接代入） */
+var DATA = {
+  cancers: [],
+  histologies: [],
+  treatments: [],
+  life: []
+};
+
+/* 3) 他のグローバル状態 */
 let __TRIALS_CACHE = [];
 let CURRENT_CANCER_ID = null;
 let HISTO_CONTEXT = null;
@@ -132,7 +143,7 @@ const EN_SYNONYMS = {
 };
 
 /* =========================================================
-   起動
+   起動（DOMContentLoaded 後に boot）
 ========================================================= */
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
@@ -148,7 +159,7 @@ async function boot(){
   initGlobalSearch();
   initTreatments();
   initLife();
-  initCommunity(); // セレクト生成
+  initCommunity();
 }
 
 /* =========================================================
@@ -161,7 +172,7 @@ async function loadData(){
     if (res.ok) {
       const j = await res.json();
       if (Array.isArray(j.cancers) && j.cancers.length) {
-        DATA = j;
+        DATA = j;                    // ここで上書き（var DATA なのでTDZなし）
         ok = true;
       }
     }
@@ -169,7 +180,7 @@ async function loadData(){
   if (!ok) {
     DATA = structuredClone(DATA_FALLBACK);
   }
-  // life を拡張（重複排除）
+  // life 拡張（重複排除）
   const byId = new Map();
   (Array.isArray(DATA.life)?DATA.life:[]).forEach(x=>byId.set(x.id,x));
   LIFE_EXTRA.forEach(x=>byId.set(x.id,x));
