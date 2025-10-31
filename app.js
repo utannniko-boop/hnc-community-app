@@ -57,7 +57,31 @@ const DATA_FALLBACK = {
     { id:"sarcoma",        name:"肉腫", aliases:["肉腫","横紋筋肉腫","骨肉腫","線維肉腫","sarcoma"], siteIds:["oral","nasal","oropharynx"] }
   ]
 };
+const LIFE_EXTRA = [
+  // —— 手術系（surgery）——
+  {id:"scar-care", title:"瘢痕ケアと拘縮予防", category:"皮膚ケア", body:"創部が落ち着いた後は、保湿と軽いマッサージを継続。日中はUV対策、就寝時は摩擦を避ける衣類を。過度な圧迫は避け、気になる盛り上がりは形成外科へ相談。", cancerIds:["oral","larynx","nasal","salivary"], treatmentType:"surgery"},
+  {id:"jaw-rehab", title:"下顎再建後の咀嚼練習", category:"嚥下・発声", body:"軟飯→やわらかいタンパク質→繊維質の順に段階。左右差があれば滑舌・咀嚼を鏡で確認しながらゆっくり練習。疼痛が強い日は休む。", cancerIds:["oral"], treatmentType:"surgery"},
 
+  // —— 放射線（radiation）——
+  {id:"taste", title:"味覚低下への対策", category:"栄養・食事", body:"酸味や香りで変化をつける（レモン・ハーブ・出汁）。金属味が強い時は木/樹脂スプーン。味が分かる時間帯に主食を。", cancerIds:["oral","oropharynx","nasopharynx","larynx","salivary"], treatmentType:"radiation"},
+  {id:"thyroid", title:"甲状腺機能のセルフチェック", category:"全身", body:"放射線後にだるさ・寒がり・むくみが続く場合は甲状腺機能を主治医に相談。体調メモを残し、採血タイミングを逃さない。", cancerIds:["nasopharynx","larynx","oropharynx","hypopharynx"], treatmentType:"radiation"},
+
+  // —— 抗がん剤（chemotherapy）——
+  {id:"nausea", title:"吐き気・食欲不振のセルフケア", category:"栄養・食事", body:"少量頻回・常温。においの弱い食品（おかゆ、うどん、クラッカー）。水分は電解質飲料やゼリーで補給。制吐薬は指示どおりに前倒し使用。", cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"], treatmentType:"chemotherapy"},
+  {id:"neuropathy", title:"しびれ（末梢神経障害）への工夫", category:"全身", body:"冷えを避ける手袋・靴下。細かい作業は道具を工夫（太いグリップ）。転倒防止に段差・滑り止め確認。症状は強くなる前に申告。", cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","larynx"], treatmentType:"chemotherapy"},
+  {id:"hearing", title:"聴力低下・耳鳴りへの気づき", category:"感覚", body:"シスプラチン使用歴がある場合、会話の聞き取りにくさ・高音の聞こえづらさ・耳鳴りに注意。症状があれば早めに聴力検査を相談。", cancerIds:["oral","oropharynx","nasopharynx","larynx"], treatmentType:"chemotherapy"},
+
+  // —— その他（other）——
+  {id:"oral-candida", title:"口腔カンジダ予防", category:"口腔ケア", body:"入れ歯・マウスピースの清掃と乾燥保管。うがい薬の使い過ぎに注意。白苔や痛みが続く場合は口腔外科/歯科で評価。", cancerIds:["oral","oropharynx","salivary","nasopharynx"], treatmentType:"other"},
+  {id:"return-to-work-plan", title:"復職計画の立て方（実例）", category:"社会・制度", body:"例：週3・4時間×2週間→週4・6時間×2週間→通常勤務。配慮事項（声量制限・電話少なめ・在宅併用）を文書化し、人事と共有。", cancerIds:["oral","oropharynx","hypopharynx","nasopharynx","larynx","salivary","nasal"], treatmentType:"other"},
+  {id:"apps", title:"便利アプリ・ツール", category:"生活", body:"発声支援アプリ、嚥下食レシピ集、服薬リマインダー、痛みスコア記録アプリを活用。家族と共有できるメモを1本化。", cancerIds:["oral","larynx","oropharynx","hypopharynx"], treatmentType:"other"}
+];
+// loadData() 内の DATA.life 整形の直後あたりに追記（存在すればマージ）
+if (Array.isArray(DATA.life)) {
+  const byId = new Map(DATA.life.map(x => [x.id, x]));
+  (LIFE_EXTRA || []).forEach(x => byId.set(x.id, { ...(byId.get(x.id)||{}), ...x }));
+  DATA.life = Array.from(byId.values());
+}
 /* ---------------- グローバル状態 ---------------- */
 let DATA = { cancers: [], treatments: [], life: [], histologies: [] };
 let CURRENT_CANCER_ID = null;
